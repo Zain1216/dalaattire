@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-import hero from "@/assets/hero-signage.jpg.asset.json";
+import hero from "@/assets/tailor-storefront.jpg";
 import cutting from "@/assets/tailoring-007.jpg.asset.json";
 import suitedMan from "@/assets/tailoring-008.jpg.asset.json";
 import handStitching from "@/assets/tailoring-040.jpg.asset.json";
@@ -91,7 +91,7 @@ function Index() {
         <button className="icon-button" aria-label="Open shopping bag"><ShoppingBag /></button>
       </header>
 
-      <section className="hero" style={{ backgroundImage: `linear-gradient(90deg, var(--hero-overlay), transparent), url(${hero.url})` }}>
+      <section className="hero" style={{ backgroundImage: `linear-gradient(90deg, var(--hero-overlay), transparent), url(${hero})` }}>
         <div className="hero-content reveal">
           <p className="eyebrow">Welcome to Daula Attire</p>
           <h1>Tailored Elegance<br />For Every Occasion</h1>
