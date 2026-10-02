@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daula Attire | Bespoke Men's Tailoring</title>
+  <meta name="description" content="Luxury bespoke menswear, handcrafted suits, sherwanis, tuxedos and traditional tailoring in Karachi.">
+  <meta name="author" content="Daula Attire">
+  <meta property="og:title" content="Daula Attire | Bespoke Men's Tailoring">
+  <meta property="og:description" content="Discover tailored elegance and luxury menswear handcrafted for every occasion.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- Navigation Drawer (Off-Canvas) -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="drawer-panel" id="nav-drawer" aria-label="Navigation Menu">
+    <div class="drawer-header">
+      <div class="brand-lockup">
+        <strong>DAULA ATTIRE</strong>
+        <span>BESPOKE MEN'S WEAR</span>
+      </div>
+      <button class="close-btn" id="nav-close-btn" aria-label="Close menu">&times;</button>
+    </div>
+    <ul class="drawer-links">
+      <li><a href="#hero">Home</a></li>
+      <li><a href="#about">About Our House</a></li>
+      <li><a href="#craft">Craftsmanship</a></li>
+      <li><a href="#vision">Bespoke Recreation</a></li>
+      <li><a href="#services">Signature Services</a></li>
+      <li><a href="#studio">Studio Karachi</a></li>
+      <li><a href="#gallery">Editorial Gallery</a></li>
+      <li><a href="#contact">Private Consultation</a></li>
+    </ul>
+    <div class="drawer-footer">
+      <p>Studio Hours: Mon - Sat: 11am - 9pm</p>
+      <p style="margin-top: 6px; color: var(--primary);">Tariq Road · Karachi, Pakistan</p>
+    </div>
+  </aside>
+
+  <!-- Shopping Bag Drawer (Off-Canvas) -->
+  <aside class="drawer-panel" id="bag-drawer" aria-label="Shopping Bag">
+    <div class="drawer-header">
+      <h3>Your Bag</h3>
+      <button class="close-btn" id="bag-close-btn" aria-label="Close shopping bag">&times;</button>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary); margin-bottom: 16px;">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <h4 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 10px;">Your Bag Is Empty</h4>
+      <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; line-height: 1.7; margin-bottom: 24px;">
+        Each Daula Attire piece is handcrafted to your exact silhouette. Reserve a consultation or explore our collections.
+      </p>
+      <a href="#services" class="btn btn-primary" style="width: 100%;">Explore Signature Cuts</a>
+    </div>
+  </aside>
+
+  <!-- Consultation / Booking Modal -->
+  <div class="modal" id="appointment-modal" aria-hidden="true" role="dialog">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Book Consultation</h3>
+        <button class="close-btn" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form class="modal-form" id="appointment-form">
+        <div class="form-group">
+          <label for="client-name">Full Name</label>
+          <input type="text" id="client-name" placeholder="Sir / Madam" required>
+        </div>
+        <div class="form-group">
+          <label for="client-phone">Phone / WhatsApp</label>
+          <input type="tel" id="client-phone" placeholder="+92 300 1234567" required>
+        </div>
+        <div class="form-group">
+          <label for="garment-type">Garment of Interest</label>
+          <select id="garment-type">
+            <option value="3-Piece Bespoke Suit">3-Piece Bespoke Suit</option>
+            <option value="Ceremonial Sherwani">Ceremonial Sherwani</option>
+            <option value="Luxury Shalwar Kameez">Luxury Shalwar Kameez</option>
+            <option value="Black Tie Tuxedo">Black Tie Tuxedo</option>
+            <option value="Prince Coat & Waistcoat">Prince Coat & Waistcoat</option>
+            <option value="Full Wedding Trousseau">Full Wedding Trousseau</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="appointment-date">Preferred Date</label>
+          <input type="date" id="appointment-date" required>
+        </div>
+        <div class="form-group">
+          <label for="client-notes">Special Requests / Fitting Notes</label>
+          <textarea id="client-notes" rows="3" placeholder="Tell our master tailors about your style preferences, event date, or fabric choices..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Request Private Fitting</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main Website Container -->
+  <main>
+    <!-- Site Header -->
+    <header class="site-header">
+      <button class="icon-button" id="menu-btn" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+
+      <a href="#hero" class="brand-lockup" aria-label="Daula Attire">
+        <strong>DAULA ATTIRE</strong>
+        <span>HOUSE OF LUXURY MEN'S WEAR</span>
+      </a>
+
+      <button class="icon-button" id="bag-btn" aria-label="Open shopping bag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="badge">0</span>
+      </button>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero" style="background-image: linear-gradient(90deg, var(--hero-overlay), rgba(18, 16, 14, 0.4)), url('assets/tailor-storefront.jpg');">
+      <div class="hero-content reveal">
+        <p class="eyebrow">Welcome to Daula Attire</p>
+        <h1>Tailored Elegance<br>For Every Occasion</h1>
+        <p class="hero-copy">Where heritage craftsmanship meets contemporary style. Made by hand, fitted to you.</p>
+        <a href="#services" class="btn btn-outline hero-cta">
+          Explore our style
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m9 18 6-6-6-6"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="section-shell intro-grid">
+      <div class="section-copy reveal">
+        <p class="eyebrow">About Us</p>
+        <h2>The Art of<br><span>Bespoke Tailoring</span></h2>
+        <p>Since 1980, Daula Attire has shaped fine cloth into garments of distinction. Every cut, seam and finish reflects an uncompromising eye for detail.</p>
+        <button class="btn btn-primary open-consultation-btn" data-service="Bespoke Suit Consultation">Discover More</button>
+      </div>
+      <div class="intro-images reveal">
+        <img src="assets/tailoring-007.jpg" alt="Tailor cutting fine fabric by hand" loading="lazy">
+        <img src="assets/tailoring-008.jpg" alt="Man wearing a tailored navy suit" loading="lazy">
+      </div>
+    </section>
+
+    <!-- Craft Section -->
+    <section id="craft" class="border-band">
+      <div class="section-shell craft-grid">
+        <img src="assets/tailoring-040.jpg" alt="Hand stitching a bespoke suit" class="reveal" loading="lazy">
+        <div class="section-copy reveal">
+          <p class="eyebrow">Craft</p>
+          <h2>Crafted<br>In Detail</h2>
+          <p>Each garment is built stitch by stitch. Our artisans bring years of practiced skill to traditional techniques, premium cloth and a truly personal fit.</p>
+          <button class="btn btn-primary open-consultation-btn" data-service="Artisan Craftsmanship Fitting">Learn More</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section id="vision" class="section-shell vision-grid">
+      <div class="section-copy reveal">
+        <p class="eyebrow">Bespoke Recreation</p>
+        <h2>Your Vision,<br>Tailored to<br>Perfection</h2>
+        <p>From the first consultation to the final fitting, your preferences guide every choice. We create clothing that feels as individual as the person wearing it.</p>
+        <p>Classic suiting or ceremonial dress, restrained or expressive—our house translates your vision into enduring elegance.</p>
+        <button class="btn btn-primary open-consultation-btn" data-service="Custom Bespoke Recreation" style="margin-top: 8px;">Book Consultation</button>
+      </div>
+      <div class="portrait-cluster reveal">
+        <img class="portrait-main" src="assets/tailoring-037.jpg" alt="Man in a navy embroidered sherwani" loading="lazy">
+        <img class="portrait-small" src="assets/tailoring-041.jpg" alt="Bespoke suit displayed on a mannequin" loading="lazy">
+      </div>
+    </section>
+
+    <!-- Services Section -->
+    <section id="services" class="services-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow">Services</p>
+        <h2>Our Signature Services</h2>
+      </div>
+      <div class="service-grid">
+        <article class="service-card reveal">
+          <img src="assets/tailoring-027.jpg" alt="3-Piece Suit" loading="lazy">
+          <div><span>3-Piece Suit</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-028.jpg" alt="Sherwani" loading="lazy">
+          <div><span>Sherwani</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-029.jpg" alt="Shalwar Kameez" loading="lazy">
+          <div><span>Shalwar Kameez</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-030.jpg" alt="Tuxedo" loading="lazy">
+          <div><span>Tuxedo</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-031.jpg" alt="Sherwani" loading="lazy">
+          <div><span>Sherwani</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-032.jpg" alt="Shalwar Kameez" loading="lazy">
+          <div><span>Shalwar Kameez</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-033.jpg" alt="Tuxedo" loading="lazy">
+          <div><span>Tuxedo</span></div>
+        </article>
+        <article class="service-card reveal">
+          <img src="assets/tailoring-034.jpg" alt="Sherwani" loading="lazy">
+          <div><span>Sherwani</span></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- Promise Band -->
+    <section class="promise-band" style="background-image: linear-gradient(var(--image-overlay), var(--image-overlay)), url('assets/tailoring-003.jpg');">
+      <div class="promise-grid">
+        <article class="reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="m9 11 3 3L22 4"/>
+          </svg>
+          <h3>Tailored to Perfection</h3>
+          <p>Measured with care, crafted with patience and finished to the highest standard.</p>
+        </article>
+        <article class="reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z"/>
+          </svg>
+          <h3>Elegance Redefined</h3>
+          <p>Measured with care, crafted with patience and finished to the highest standard.</p>
+        </article>
+        <article class="reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/>
+          </svg>
+          <h3>Luxury in Every Detail</h3>
+          <p>Measured with care, crafted with patience and finished to the highest standard.</p>
+        </article>
+        <article class="reveal">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/>
+          </svg>
+          <h3>25 Year Experience</h3>
+          <p>Measured with care, crafted with patience and finished to the highest standard.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Studio Karachi Section -->
+    <section id="studio" class="section-shell studio-section">
+      <img src="assets/tailoring-026.jpg" onerror="this.onerror=null;this.src='assets/tailoring-034.jpg';" alt="Black embroidered formal jacket" class="reveal" loading="lazy">
+      <div class="studio-center reveal">
+        <h2>Visit Our<br>Studio in Karachi</h2>
+        <div class="map-card">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span>Daula Attire</span>
+          <small>Tariq Road · Karachi</small>
+          <a href="https://maps.google.com/?q=Tariq+Road+Karachi" target="_blank" rel="noopener noreferrer" class="map-btn">
+            Open in Google Maps
+          </a>
+        </div>
+      </div>
+      <img src="assets/tailoring-025.jpg" onerror="this.onerror=null;this.src='assets/tailoring-037.jpg';" alt="Man wearing a black formal sherwani" class="reveal" loading="lazy">
+    </section>
+
+    <!-- Gallery Section -->
+    <section id="gallery" class="section-shell gallery-section">
+      <div class="reveal">
+        <p class="eyebrow">Gallery</p>
+        <h2>Style Note &amp; Stories</h2>
+      </div>
+      <div class="gallery-grid">
+        <div class="gallery-card reveal">
+          <img src="assets/tailoring-001.jpg" alt="Daula Attire tailoring story 1" loading="lazy">
+        </div>
+        <div class="gallery-card reveal">
+          <img src="assets/tailoring-002.jpg" alt="Daula Attire tailoring story 2" loading="lazy">
+        </div>
+        <div class="gallery-card reveal">
+          <img src="assets/tailoring-006.jpg" alt="Daula Attire tailoring story 3" loading="lazy">
+        </div>
+        <div class="gallery-card reveal">
+          <img src="assets/tailoring-003.jpg" alt="Daula Attire tailoring story 4" loading="lazy">
+        </div>
+      </div>
+    </section>
+
+    <!-- Site Footer -->
+    <footer id="contact" style="background-image: linear-gradient(var(--footer-overlay), var(--footer-overlay)), url('assets/tailoring-002.jpg');">
+      <div class="brand-lockup">
+        <strong>DAULA ATTIRE</strong>
+        <span>HOUSE OF LUXURY MEN'S WEAR</span>
+      </div>
+
+      <div class="footer-address">
+        <p class="eyebrow">Address</p>
+        <p>Visit our Karachi studio for fittings and private consultations.</p>
+        <div>
+          <a href="tel:+92223305070">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+            </svg>
+            +92 22 3305070
+          </a>
+        </div>
+        <div>
+          <a href="mailto:info@daulaattire.com">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+            info@daulaattire.com
+          </a>
+        </div>
+      </div>
+
+      <form class="subscribe" id="subscribe-form">
+        <label for="email">Subscribe to new arrivals &amp; private trunk shows</label>
+        <div class="subscribe-box">
+          <input id="email" type="email" placeholder="Enter your email address" required>
+          <button type="submit" class="btn btn-primary">Subscribe</button>
+        </div>
+      </form>
+    </footer>
+  </main>
+
+  <!-- Toast Notification Popup -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</body>
+</html>
