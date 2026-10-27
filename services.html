@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Our Services | Daula Attire</title>
+  <meta name="description" content="Bespoke sherwanis, tuxedos and shalwar kameez handcrafted in Karachi by Daula Attire.">
+  <meta name="author" content="Daula Attire">
+  <link rel="icon" href="assets/favicon.ico" type="image/x-icon">
+
+  <!-- Google Fonts: Cormorant Garamond & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+
+  <!-- Navigation Drawer (Off-Canvas) -->
+  <div class="drawer-overlay" id="drawer-overlay"></div>
+  <aside class="drawer-panel" id="nav-drawer" aria-label="Navigation Menu">
+    <button class="close-btn nav-close" id="nav-close-btn" aria-label="Close menu">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+        <line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/>
+      </svg>
+    </button>
+    <a href="index.html" class="nav-logo">
+      <img src="assets/daula-logo.png" alt="Daula Attire - House of Luxury Men's Wear">
+    </a>
+    <ul class="nav-links">
+      <li>
+        <a href="index.html">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3 3 10.5V21h6.5v-6h5v6H21V10.5Z"/></svg>
+          </span>
+          Home
+        </a>
+      </li>
+      <li>
+        <a href="about.html">
+          <span class="nav-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8.5" r="3.5"/><path d="M5.5 20a6.5 6.5 0 0 1 13 0Z"/></svg>
+          </span>
+          About
+        </a>
+      </li>
+      <li>
+        <a href="services.html" class="active" aria-current="page">
+          <span class="nav-icon nav-icon-bare">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="m12 2 10 5-10 5L2 7Z"/><path d="m2 12 10 5 10-5-2.2-1.1L12 14.8 4.2 10.9Z"/><path d="m2 17 10 5 10-5-2.2-1.1L12 19.8 4.2 15.9Z"/></svg>
+          </span>
+          Services
+        </a>
+      </li>
+      <li>
+        <a href="index.html#gallery">
+          <span class="nav-icon nav-icon-bare">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3 4h18v16H3Zm2 13h14l-4.5-6-3.5 4.5-2.5-3Zm3.5-7.5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z"/></svg>
+          </span>
+          Gallery
+        </a>
+      </li>
+      <li>
+        <a href="contact.html">
+          <span class="nav-icon nav-icon-bare">
+            <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="6.5" r="4.5"/><path d="M4 22a8 8 0 0 1 16 0Z"/></svg>
+          </span>
+          Contact
+        </a>
+      </li>
+    </ul>
+    <div class="nav-social">
+      <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+      </a>
+      <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+      </a>
+      <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.2 4.3 5 4.5"/></svg>
+      </a>
+    </div>
+  </aside>
+
+  <!-- Shopping Bag Drawer (Off-Canvas) -->
+  <aside class="drawer-panel" id="bag-drawer" aria-label="Shopping Bag">
+    <div class="drawer-header">
+      <h3>Your Bag</h3>
+      <button class="close-btn" id="bag-close-btn" aria-label="Close shopping bag">&times;</button>
+    </div>
+    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary); margin-bottom: 16px;">
+        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <h4 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 10px;">Your Bag Is Empty</h4>
+      <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; line-height: 1.7; margin-bottom: 24px;">
+        Each Daula Attire piece is handcrafted to your exact silhouette. Reserve a consultation or explore our collections.
+      </p>
+      <a href="services.html" class="btn btn-primary" style="width: 100%;">Explore Signature Cuts</a>
+    </div>
+  </aside>
+
+  <!-- Consultation / Booking Modal -->
+  <div class="modal" id="appointment-modal" aria-hidden="true" role="dialog">
+    <div class="modal-backdrop"></div>
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Book Consultation</h3>
+        <button class="close-btn" id="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+      <form class="modal-form" id="appointment-form">
+        <div class="form-group">
+          <label for="client-name">Full Name</label>
+          <input type="text" id="client-name" placeholder="Sir / Madam" required>
+        </div>
+        <div class="form-group">
+          <label for="client-phone">Phone / WhatsApp</label>
+          <input type="tel" id="client-phone" placeholder="+92 300 1234567" required>
+        </div>
+        <div class="form-group">
+          <label for="garment-type">Garment of Interest</label>
+          <select id="garment-type">
+            <option value="3-Piece Bespoke Suit">3-Piece Bespoke Suit</option>
+            <option value="Ceremonial Sherwani">Ceremonial Sherwani</option>
+            <option value="Luxury Shalwar Kameez">Luxury Shalwar Kameez</option>
+            <option value="Black Tie Tuxedo">Black Tie Tuxedo</option>
+            <option value="Prince Coat & Waistcoat">Prince Coat & Waistcoat</option>
+            <option value="Full Wedding Trousseau">Full Wedding Trousseau</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="appointment-date">Preferred Date</label>
+          <input type="date" id="appointment-date" required>
+        </div>
+        <div class="form-group">
+          <label for="client-notes">Special Requests / Fitting Notes</label>
+          <textarea id="client-notes" rows="3" placeholder="Tell our master tailors about your style preferences, event date, or fabric choices..."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 8px;">Request Private Fitting</button>
+      </form>
+    </div>
+  </div>
+
+  <main>
+    <!-- Site Header -->
+    <header class="site-header">
+      <button class="icon-button" id="menu-btn" aria-label="Open menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>
+        </svg>
+      </button>
+
+      <a href="index.html" class="brand-lockup" aria-label="Daula Attire">
+        <strong>DAULA ATTIRE</strong>
+        <span>HOUSE OF LUXURY MEN'S WEAR</span>
+      </a>
+
+      <button class="icon-button" id="bag-btn" aria-label="Open shopping bag">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
+        </svg>
+        <span class="badge">0</span>
+      </button>
+    </header>
+
+    <!-- Page Hero -->
+    <section class="page-hero page-hero-wide" style="--hero-img: url('assets/pages/services-hero.jpg');">
+      <div class="page-hero-content reveal">
+        <p class="eyebrow">Tailoring &amp; Fashion Craftsmanship</p>
+        <h1>Our<br>Services</h1>
+        <p class="hero-copy">Ceremonial sherwanis, black-tie tuxedos and refined shalwar kameez — each one drafted, cut and finished by hand for the man who wears it.</p>
+        <a href="#what-we-offer" class="hero-cta">
+          <span>Explore Our Services</span>
+          <svg width="52" height="12" viewBox="0 0 52 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="0" y1="6" x2="49" y2="6"/>
+            <polyline points="43 1 50 6 43 11"/>
+          </svg>
+        </a>
+      </div>
+    </section>
+
+    <!-- What We Offer -->
+    <section id="what-we-offer" class="section-shell offer-section">
+      <div class="section-heading reveal">
+        <p class="eyebrow eyebrow-flanked">Our Services</p>
+        <h2>What We Offer</h2>
+        <p class="offer-lede">Bespoke menswear crafted with precision, luxury, and 30+ years of timeless tailoring excellence in Karachi.</p>
+      </div>
+
+      <div class="offer-category reveal">
+        <h3 class="category-pill">Sherwani</h3>
+        <div class="carousel" data-carousel>
+          <div class="carousel-track">
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/pages/sherwani-1.jpg" alt="Ivory embroidered sherwani jacket" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/pages/sherwani-2.jpg" alt="Gold groom sherwani with layered necklace and turban" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/pages/sherwani-3.jpg" alt="Champagne sherwani with embroidered collar" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/tailoring-028.jpg" alt="Sherwani" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/tailoring-031.jpg" alt="Sherwani" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Ceremonial Sherwani"><img src="assets/tailoring-034.jpg" alt="Sherwani" loading="lazy"></button>
+          </div>
+          <div class="carousel-dots" aria-label="Sherwani slides"></div>
+        </div>
+      </div>
+
+      <div class="offer-category reveal">
+        <h3 class="category-pill">Tuxedo</h3>
+        <div class="carousel" data-carousel>
+          <div class="carousel-track">
+            <button class="offer-card open-consultation-btn" data-service="Black Tie Tuxedo"><img src="assets/pages/tuxedo-1.jpg" alt="White dinner jacket with black bow tie" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Black Tie Tuxedo"><img src="assets/pages/tuxedo-2.jpg" alt="Classic black tuxedo with satin lapels" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Black Tie Tuxedo"><img src="assets/pages/tuxedo-3.jpg" alt="Black tuxedo worn outdoors with bow tie" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Black Tie Tuxedo"><img src="assets/tailoring-030.jpg" alt="Tuxedo" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Black Tie Tuxedo"><img src="assets/tailoring-033.jpg" alt="Tuxedo" loading="lazy"></button>
+          </div>
+          <div class="carousel-dots" aria-label="Tuxedo slides"></div>
+        </div>
+      </div>
+
+      <div class="offer-category reveal">
+        <h3 class="category-pill">Shalwar Kameez</h3>
+        <div class="carousel" data-carousel>
+          <div class="carousel-track">
+            <button class="offer-card open-consultation-btn" data-service="Luxury Shalwar Kameez"><img src="assets/pages/shalwar-1.jpg" alt="Olive shalwar kameez with waistcoat" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Luxury Shalwar Kameez"><img src="assets/pages/shalwar-2.jpg" alt="Charcoal grey kameez with collar" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Luxury Shalwar Kameez"><img src="assets/pages/shalwar-3.jpg" alt="Sage green kameez with band collar" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Luxury Shalwar Kameez"><img src="assets/tailoring-029.jpg" alt="Shalwar Kameez" loading="lazy"></button>
+            <button class="offer-card open-consultation-btn" data-service="Luxury Shalwar Kameez"><img src="assets/tailoring-032.jpg" alt="Shalwar Kameez" loading="lazy"></button>
+          </div>
+          <div class="carousel-dots" aria-label="Shalwar Kameez slides"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Elegance Band -->
+    <section class="gold-rule elegance-band" style="background-image: linear-gradient(rgba(16, 12, 9, 0.9), rgba(16, 12, 9, 0.86)), url('assets/footer-bg.jpg');">
+      <div class="elegance-grid">
+        <div class="arch-frame reveal">
+          <img src="assets/pages/services-mannequin.jpg" alt="Embroidered gold sherwani on a tailor's mannequin" loading="lazy">
+        </div>
+        <div class="elegance-copy reveal">
+          <p class="eyebrow">Premium Menswear Services</p>
+          <h2>Elegance for<br>Every Occasion</h2>
+          <p>From the nikkah to the boardroom, we create garments that suit the moment. Choose your cloth, embroidery and finish, and our tailors will bring it together with a fit made only for you.</p>
+          <button class="btn btn-gold-outline btn-square open-consultation-btn" data-service="Full Wedding Trousseau">Book an Appointment</button>
+        </div>
+        <ul class="feature-list reveal">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"><path d="M6 3h12l4 6-10 13L2 9Z"/><path d="M11 3 8 9l4 13 4-13-3-6"/><path d="M2 9h20"/></svg>
+            <span>Premium<br>Fabrics</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="9" r="3"/><path d="M6.5 18.5a6 6 0 0 1 11 0"/></svg>
+            <span>Experts<br>Tailor</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="m12 2 2.2 4.6 5 .7-3.6 3.5.9 5L12 13.4 7.5 15.8l.9-5L4.8 7.3l5-.7Z"/><path d="M3 21h4l3-2h5"/></svg>
+            <span>Perfect<br>Fit</span>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+            <span>Timeless<br>Style</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Site Footer -->
+    <footer id="contact" style="background-image: linear-gradient(rgba(14, 11, 8, 0.48), rgba(14, 11, 8, 0.58)), url('assets/footer-bg.jpg');">
+      <div class="footer-brand">
+        <img src="assets/daula-logo.png" alt="Daula Attire - House of Luxury Men's Wear" class="footer-crest-logo">
+      </div>
+
+      <div class="footer-middle">
+        <h3 class="footer-heading">ADDRESS</h3>
+        <p class="footer-subtext">SUBSCRIBE TO THE MAILING LIST TO<br>RECEIVE UPDATES ON NEW ARRIVALS</p>
+        <div class="footer-contact-list">
+          <a href="tel:+92022305070" class="footer-contact-item">
+            <span class="circle-icon">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                <path d="M20.01 15.38c-1.23 0-2.42-.2-3.53-.56a.977.977 0 0 0-1.01.24l-2.2 2.2a15.045 15.045 0 0 1-6.59-6.59l2.2-2.21a.96.96 0 0 0 .25-1A11.36 11.36 0 0 1 8.5 3.99c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1 0 9.39 7.61 17 17 17 .55 0 1-.45 1-1v-3.5c0-.55-.45-1-.99-1.11z"/>
+              </svg>
+            </span>
+            <span>+92022305070</span>
+          </a>
+          <a href="mailto:info@daulattire.com" class="footer-contact-item">
+            <span class="circle-icon">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
+                <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+              </svg>
+            </span>
+            <span>info@daulattire.com</span>
+          </a>
+        </div>
+      </div>
+
+      <div class="footer-right">
+        <div class="footer-social-row">
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>
+            </svg>
+          </a>
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect width="20" height="20" x="2" y="2" rx="5" ry="5"/>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/>
+              <line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/>
+            </svg>
+          </a>
+          <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.24 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/>
+            </svg>
+          </a>
+        </div>
+        <form class="footer-form" id="subscribe-form">
+          <input type="email" id="email" placeholder="ENTER YOUR EMAIL ADRESS" required>
+          <button type="submit" class="btn-subscribe">SUBSCRIBE</button>
+        </form>
+      </div>
+    </footer>
+  </main>
+
+  <!-- Toast Notification Popup -->
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+</body>
+</html>

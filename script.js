@@ -63,6 +63,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const navLinks = navDrawer?.querySelectorAll("a");
   navLinks?.forEach((link) => {
     link.addEventListener("click", () => {
+      navDrawer.querySelectorAll(".nav-links a").forEach((a) => a.classList.remove("active"));
+      if (link.closest(".nav-links")) link.classList.add("active");
       closeAllDrawers();
     });
   });
@@ -127,6 +129,57 @@ document.addEventListener("DOMContentLoaded", () => {
       emailInput.value = "";
       showToast("Thank you for subscribing to Daula Attire.");
     }
+  });
+
+  // Contact Page Message Form Submit
+  const messageForm = document.getElementById("message-form");
+  messageForm?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const name = document.getElementById("msg-name")?.value.trim() || "Client";
+    messageForm.reset();
+    showToast(`Thank you, ${name}. Our team will be in touch shortly.`);
+  });
+
+  // Services Page Carousels: one dot per page of visible cards
+  document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+    const track = carousel.querySelector(".carousel-track");
+    const dotsWrap = carousel.querySelector(".carousel-dots");
+    if (!track || !dotsWrap) return;
+
+    function pageCount() {
+      return Math.max(1, Math.round(track.scrollWidth / track.clientWidth));
+    }
+
+    function currentPage() {
+      const max = track.scrollWidth - track.clientWidth;
+      if (max <= 0) return 0;
+      return Math.round((track.scrollLeft / max) * (pageCount() - 1));
+    }
+
+    function renderDots() {
+      const pages = pageCount();
+      dotsWrap.innerHTML = "";
+      for (let i = 0; i < pages; i++) {
+        const dot = document.createElement("button");
+        dot.type = "button";
+        dot.setAttribute("aria-label", `Show slide ${i + 1}`);
+        dot.addEventListener("click", () => {
+          const max = track.scrollWidth - track.clientWidth;
+          track.scrollTo({ left: pages > 1 ? (max * i) / (pages - 1) : 0 });
+        });
+        dotsWrap.appendChild(dot);
+      }
+      updateDots();
+    }
+
+    function updateDots() {
+      const active = currentPage();
+      dotsWrap.querySelectorAll("button").forEach((dot, i) => dot.classList.toggle("active", i === active));
+    }
+
+    track.addEventListener("scroll", updateDots, { passive: true });
+    window.addEventListener("resize", renderDots);
+    renderDots();
   });
 
   // Service Card Click Action
