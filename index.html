@@ -87,23 +87,6 @@
     </div>
   </aside>
 
-  <!-- Shopping Bag Drawer (Off-Canvas) -->
-  <aside class="drawer-panel" id="bag-drawer" aria-label="Shopping Bag">
-    <div class="drawer-header">
-      <h3>Your Bag</h3>
-      <button class="close-btn" id="bag-close-btn" aria-label="Close shopping bag">&times;</button>
-    </div>
-    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 20px;">
-      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--primary); margin-bottom: 16px;">
-        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
-      </svg>
-      <h4 style="font-family: var(--font-serif); font-size: 1.4rem; margin-bottom: 10px;">Your Bag Is Empty</h4>
-      <p style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; line-height: 1.7; margin-bottom: 24px;">
-        Each Daula Attire piece is handcrafted to your exact silhouette. Reserve a consultation or explore our collections.
-      </p>
-      <a href="#services" class="btn btn-primary" style="width: 100%;">Explore Signature Cuts</a>
-    </div>
-  </aside>
 
   <!-- Consultation / Booking Modal -->
   <div class="modal" id="appointment-modal" aria-hidden="true" role="dialog">
@@ -161,12 +144,12 @@
         <span>HOUSE OF LUXURY MEN'S WEAR</span>
       </a>
 
-      <button class="icon-button" id="bag-btn" aria-label="Open shopping bag">
+      <a href="cart.html" class="icon-button" id="bag-btn" aria-label="View your cart">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/>
         </svg>
         <span class="badge">0</span>
-      </button>
+      </a>
     </header>
 
     <!-- Hero Section -->
