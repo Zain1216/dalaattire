@@ -110,6 +110,13 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const DEFAULT_PRODUCT = "emerald-sherwani";
   const CART_KEY = "daula-cart";
+  const COUPON_KEY = "daula-coupon";
+
+  // Checkout settings: delivery charge and where customers send their order.
+  // ORDER_WHATSAPP: international format without + or spaces (e.g. "923001234567"); empty hides the button.
+  const SHIPPING_FEE = 0;
+  const ORDER_EMAIL = "info@daulattire.com";
+  const ORDER_WHATSAPP = "";
 
   function formatPrice(amount) {
     return "Rs. " + amount.toLocaleString("en-US");
@@ -293,16 +300,127 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCart();
     });
 
+    const couponInput = document.getElementById("coupon-code");
+    try {
+      couponInput.value = sessionStorage.getItem(COUPON_KEY) || "";
+    } catch {
+      // Storage unavailable
+    }
+
     document.getElementById("checkout-btn")?.addEventListener("click", () => {
       if (!readCart().length) {
         showToast("Your cart is empty.");
         return;
       }
-      openModal();
-      showToast("Online checkout is coming soon. Request a fitting to place your order.");
+      try {
+        sessionStorage.setItem(COUPON_KEY, couponInput.value.trim());
+      } catch {
+        // Storage unavailable: coupon is not carried over
+      }
+      location.href = "checkout.html";
     });
 
     renderCart();
+  }
+
+  // Checkout Page
+  const checkoutPage = document.getElementById("checkout-page");
+  // An empty cart has nothing to check out
+  if (checkoutPage && !readCart().length) {
+    location.replace("cart.html");
+  } else if (checkoutPage) {
+    const form = document.getElementById("checkout-form");
+    const errorEl = document.getElementById("checkout-error");
+    const items = readCart();
+    let coupon = "";
+    try {
+      coupon = sessionStorage.getItem(COUPON_KEY) || "";
+    } catch {
+      // Storage unavailable
+    }
+
+    const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
+    const total = subtotal + SHIPPING_FEE;
+
+    document.getElementById("checkout-items").innerHTML = items
+      .map((item) => {
+        const product = PRODUCTS[item.id];
+        return `
+          <li>
+            <img src="${product.images[0]}" alt="">
+            <div>
+              <span class="checkout-item-name">${product.name}</span>
+              <small>Size ${item.size} &middot; Qty ${item.qty}</small>
+            </div>
+            <strong>${formatPrice(product.price * item.qty)}</strong>
+          </li>`;
+      })
+      .join("");
+    document.getElementById("checkout-subtotal").textContent = formatPrice(subtotal);
+    document.getElementById("checkout-shipping").textContent = SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free";
+    document.getElementById("checkout-total").textContent = formatPrice(total);
+    if (coupon) {
+      document.getElementById("checkout-coupon-row").hidden = false;
+      document.getElementById("checkout-coupon").textContent = coupon;
+    }
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      form.classList.add("was-validated");
+      const firstInvalid = form.querySelector(":invalid");
+      if (firstInvalid) {
+        errorEl.textContent = "Please fill in the highlighted fields.";
+        errorEl.hidden = false;
+        firstInvalid.focus();
+        return;
+      }
+      errorEl.hidden = true;
+
+      const data = Object.fromEntries(new FormData(form));
+      const orderNumber = "DA-" + Date.now().toString().slice(-6);
+      const lines = [
+        `New order ${orderNumber}`,
+        "",
+        ...items.map((item) => {
+          const product = PRODUCTS[item.id];
+          return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(product.price * item.qty)}`;
+        }),
+        "",
+        `Subtotal: ${formatPrice(subtotal)}`,
+        `Shipping: ${SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free"}`,
+        coupon ? `Coupon: ${coupon}` : null,
+        `Total: ${formatPrice(total)}`,
+        `Payment: ${data.payment}`,
+        "",
+        `Name: ${data.name}`,
+        `Phone: ${data.phone}`,
+        data.email ? `Email: ${data.email}` : null,
+        `Address: ${data.address}, ${data.city}${data.postal ? " " + data.postal : ""}`,
+        data.notes ? `Notes: ${data.notes}` : null,
+      ].filter((line) => line !== null);
+      const message = lines.join("\n");
+
+      document.getElementById("order-number").textContent = orderNumber;
+      document.getElementById("order-phone").textContent = data.phone;
+      document.getElementById("order-email-btn").href =
+        `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent("Order " + orderNumber)}&body=${encodeURIComponent(message)}`;
+      if (ORDER_WHATSAPP) {
+        const whatsappBtn = document.getElementById("order-whatsapp-btn");
+        whatsappBtn.href = `https://wa.me/${ORDER_WHATSAPP}?text=${encodeURIComponent(message)}`;
+        whatsappBtn.hidden = false;
+      }
+
+      writeCart([]);
+      try {
+        sessionStorage.removeItem(COUPON_KEY);
+      } catch {
+        // Storage unavailable
+      }
+      document.getElementById("checkout-layout").hidden = true;
+      checkoutPage.querySelector("h1").hidden = true;
+      document.getElementById("order-done").hidden = false;
+      window.scrollTo({ top: 0 });
+    });
   }
 
   // Consultation Modal Events
