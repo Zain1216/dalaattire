@@ -60,10 +60,69 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================================================
   // Shop: product catalog, cart storage, product page and cart page
   // ==========================================================================
+  // Listed in the order the Sherwani category page shows them.
+  // availability: "In Stock" or "Made to Order"; color: used by the category page filters.
   const PRODUCTS = {
+    "beige-sherwani": {
+      name: "Beige Hand Embroidered Sherwani",
+      price: 12999,
+      color: "Beige",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/pages/sherwani-1.jpg"],
+      description: "Soft beige cloth with tonal hand embroidery and a classic band collar.",
+    },
+    "gold-groom-sherwani": {
+      name: "Gold Groom Sherwani",
+      price: 12999,
+      color: "Gold",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/pages/sherwani-2.jpg"],
+      description: "Quilted gold sherwani for the groom, finished with a matching collar.",
+    },
+    "champagne-sherwani": {
+      name: "Champagne Jamawar Sherwani",
+      price: 12999,
+      color: "Beige",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/pages/sherwani-3.jpg"],
+      description: "Champagne jamawar with an embroidered collar and cuffs.",
+    },
+    "bottle-green-sherwani": {
+      name: "Bottle Green Sherwani",
+      price: 12999,
+      color: "Green",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/products/bottle-green-sherwani.jpg"],
+      description: "Bottle green sherwani with gold threadwork along the front opening.",
+    },
+    "steel-blue-sherwani": {
+      name: "Steel Blue Embroidered Sherwani",
+      price: 12999,
+      color: "Blue",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/products/steel-blue-sherwani.jpg"],
+      description: "Steel blue jacquard with ivory floral embroidery and pearl buttons.",
+    },
+    "emerald-angrakha-sherwani": {
+      name: "Emerald Angrakha Sherwani",
+      price: 12999,
+      color: "Green",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/products/emerald-angrakha-sherwani.jpg"],
+      description: "Angrakha-style emerald sherwani with an embroidered panel.",
+    },
     "emerald-sherwani": {
       name: "Emerald Embroidered Sherwani",
       price: 48000,
+      color: "Green",
+      category: "sherwani",
+      availability: "In Stock",
       images: [
         "assets/products/emerald-sherwani.jpg",
         "assets/products/emerald-sherwani-detail-1.jpg",
@@ -71,43 +130,178 @@ document.addEventListener("DOMContentLoaded", () => {
       ],
       description: "Deep emerald jamawar with an asymmetric front and hand-worked antique gold embroidery.",
     },
-    "beige-sherwani": {
-      name: "Beige Hand Embroidered Sherwani",
+    "ivory-sherwani": {
+      name: "Ivory Sherwani with Shawl",
       price: 12999,
-      images: ["assets/pages/sherwani-1.jpg"],
-      description: "Soft beige cloth with tonal hand embroidery and a classic band collar.",
+      color: "Ivory",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/products/ivory-sherwani.jpg"],
+      description: "Ivory jamawar with an embroidered collar and a matching draped shawl.",
     },
-    "gold-groom-sherwani": {
-      name: "Gold Groom Sherwani",
+    "navy-embroidered-sherwani": {
+      name: "Navy Embroidered Sherwani",
       price: 12999,
-      images: ["assets/pages/sherwani-2.jpg"],
-      description: "Quilted gold sherwani for the groom, finished with a matching collar.",
+      color: "Blue",
+      category: "sherwani",
+      availability: "In Stock",
+      images: ["assets/products/navy-embroidered-sherwani.jpg"],
+      description: "Navy silk with silver embroidery down the front panel and cuffs.",
     },
-    "champagne-sherwani": {
-      name: "Champagne Jamawar Sherwani",
+    "maroon-velvet-sherwani": {
+      name: "Maroon Velvet Sherwani",
       price: 12999,
-      images: ["assets/pages/sherwani-3.jpg"],
-      description: "Champagne jamawar with an embroidered collar and cuffs.",
+      color: "Maroon",
+      category: "sherwani",
+      availability: "Made to Order",
+      images: ["assets/products/maroon-velvet-sherwani.jpg"],
+      description: "Rich maroon velvet with antique gold floral embroidery on the hem and sleeves.",
     },
-    "bottle-green-sherwani": {
-      name: "Bottle Green Sherwani",
+    "green-velvet-sherwani": {
+      name: "Green Velvet Sherwani",
       price: 12999,
-      images: ["assets/products/bottle-green-sherwani.jpg"],
-      description: "Bottle green sherwani with gold threadwork along the front opening.",
+      color: "Green",
+      category: "sherwani",
+      availability: "Made to Order",
+      images: ["assets/products/green-velvet-sherwani.jpg"],
+      description: "Deep green velvet with gold floral embroidery for winter weddings.",
     },
-    "steel-blue-sherwani": {
-      name: "Steel Blue Embroidered Sherwani",
+    "navy-velvet-sherwani": {
+      name: "Navy Velvet Sherwani",
       price: 12999,
-      images: ["assets/products/steel-blue-sherwani.jpg"],
-      description: "Steel blue jacquard with ivory floral embroidery and pearl buttons.",
+      color: "Blue",
+      category: "sherwani",
+      availability: "Made to Order",
+      images: ["assets/products/navy-velvet-sherwani.jpg"],
+      description: "Navy velvet with paisley and lattice embroidery in antique gold.",
     },
-    "emerald-angrakha-sherwani": {
-      name: "Emerald Angrakha Sherwani",
+    "white-dinner-jacket-tuxedo": {
+      name: "White Dinner Jacket Tuxedo",
       price: 12999,
-      images: ["assets/products/emerald-angrakha-sherwani.jpg"],
-      description: "Angrakha-style emerald sherwani with an embroidered panel.",
+      color: "Ivory",
+      category: "tuxedo",
+      availability: "In Stock",
+      images: ["assets/pages/tuxedo-1.jpg"],
+      description: "Ivory dinner jacket with a shawl collar, worn with a black bow tie.",
+    },
+    "classic-black-tuxedo": {
+      name: "Classic Black Tuxedo",
+      price: 12999,
+      color: "Black",
+      category: "tuxedo",
+      availability: "In Stock",
+      images: ["assets/pages/tuxedo-2.jpg"],
+      description: "Single-breasted black tuxedo with satin shawl lapels.",
+    },
+    "black-tie-tuxedo": {
+      name: "Black Tie Peak Lapel Tuxedo",
+      price: 12999,
+      color: "Black",
+      category: "tuxedo",
+      availability: "In Stock",
+      images: ["assets/pages/tuxedo-3.jpg"],
+      description: "Black tuxedo with peak lapels for formal evening events.",
+    },
+    "brown-pinstripe-tuxedo": {
+      name: "Brown Pinstripe Double-Breasted Tuxedo",
+      price: 12999,
+      color: "Brown",
+      category: "tuxedo",
+      availability: "Made to Order",
+      images: ["assets/products/brown-pinstripe-tuxedo.jpg"],
+      description: "Double-breasted brown pinstripe with a soft structured shoulder.",
+    },
+    "brown-tuxedo": {
+      name: "Brown Tuxedo with Waistcoat",
+      price: 12999,
+      color: "Brown",
+      category: "tuxedo",
+      availability: "Made to Order",
+      images: ["assets/products/brown-tuxedo.jpg"],
+      description: "Brown tuxedo with a double-breasted contrast waistcoat and bow tie.",
+    },
+    "olive-shalwar-kameez": {
+      name: "Olive Shalwar Kameez with Waistcoat",
+      price: 12999,
+      color: "Green",
+      category: "shalwar-kameez",
+      availability: "In Stock",
+      images: ["assets/pages/shalwar-1.jpg"],
+      description: "Olive shalwar kameez paired with a matching band-collar waistcoat.",
+    },
+    "charcoal-shalwar-kameez": {
+      name: "Charcoal Shalwar Kameez",
+      price: 12999,
+      color: "Grey",
+      category: "shalwar-kameez",
+      availability: "In Stock",
+      images: ["assets/pages/shalwar-2.jpg"],
+      description: "Charcoal grey kameez with a shirt collar and concealed placket.",
+    },
+    "sage-shalwar-kameez": {
+      name: "Sage Shalwar Kameez",
+      price: 12999,
+      color: "Green",
+      category: "shalwar-kameez",
+      availability: "In Stock",
+      images: ["assets/pages/shalwar-3.jpg"],
+      description: "Sage green kameez with a band collar and front pocket.",
+    },
+    "beige-shalwar-kameez": {
+      name: "Beige Shalwar Kameez",
+      price: 12999,
+      color: "Beige",
+      category: "shalwar-kameez",
+      availability: "In Stock",
+      images: ["assets/products/beige-shalwar-kameez.jpg"],
+      description: "Beige kameez with a contrast collar and patch pocket.",
+    },
+    "navy-shalwar-kameez": {
+      name: "Navy Shalwar Kameez",
+      price: 12999,
+      color: "Blue",
+      category: "shalwar-kameez",
+      availability: "In Stock",
+      images: ["assets/products/navy-shalwar-kameez.jpg"],
+      description: "Deep navy kameez with a classic collar for evening wear.",
+    },
+    "olive-three-piece-suit": {
+      name: "Olive Three-Piece Suit",
+      price: 12999,
+      color: "Green",
+      category: "three-piece-suit",
+      availability: "In Stock",
+      images: ["assets/products/olive-three-piece-suit.jpg"],
+      description: "Olive wool three-piece with notch lapels and a matching waistcoat.",
+    },
+    "navy-three-piece-suit": {
+      name: "Navy Three-Piece Suit",
+      price: 12999,
+      color: "Blue",
+      category: "three-piece-suit",
+      availability: "In Stock",
+      images: ["assets/pages/about-portrait.jpg"],
+      description: "Navy single-breasted three-piece, cut slim with a matching waistcoat.",
+    },
+    "navy-double-breasted-suit": {
+      name: "Navy Double-Breasted Suit",
+      price: 12999,
+      color: "Blue",
+      category: "three-piece-suit",
+      availability: "Made to Order",
+      images: ["assets/tailoring-008.jpg"],
+      description: "Navy double-breasted suit with peak lapels and a waistcoat.",
     },
   };
+
+  // Category pages: category.html?c=<key>. No key shows every product.
+  const CATEGORIES = {
+    sherwani: { name: "Sherwani", hero: "assets/pages/services-hero.jpg" },
+    tuxedo: { name: "Tuxedo", hero: "assets/pages/about-hero.jpg" },
+    "shalwar-kameez": { name: "Shalwar Kameez", hero: "assets/pages/contact-store.jpg" },
+    "three-piece-suit": { name: "3-Piece Suit", hero: "assets/footer-bg.jpg" },
+  };
+  const ALL_CATEGORY = { name: "Shop All", hero: "assets/pages/contact-hero.jpg" };
   const DEFAULT_PRODUCT = "emerald-sherwani";
   const CART_KEY = "daula-cart";
   const COUPON_KEY = "daula-coupon";
@@ -169,6 +363,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.title = `${product.name} | Daula Attire`;
     document.getElementById("product-name").textContent = product.name;
+    const categoryLink = document.getElementById("product-category");
+    categoryLink.textContent = CATEGORIES[product.category].name;
+    categoryLink.href = `category.html?c=${product.category}`;
     document.getElementById("product-desc").textContent = product.description;
     document.getElementById("product-price").textContent = formatPrice(product.price);
     mainImg.src = product.images[0];
@@ -231,8 +428,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const related = document.getElementById("related-grid");
+    // Same category first, then the rest of the catalog
     Object.entries(PRODUCTS)
       .filter(([id]) => id !== productId)
+      .sort(([, x], [, y]) => (y.category === product.category) - (x.category === product.category))
       .slice(0, 6)
       .forEach(([id, item]) => {
         const card = document.createElement("a");
@@ -244,6 +443,112 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${formatPrice(item.price)}.00 PKR</p>`;
         related?.appendChild(card);
       });
+  }
+
+  // Category Page: product grid with Availability / Price / Colors filters
+  const categoryGrid = document.getElementById("category-grid");
+  if (categoryGrid) {
+    const PRICE_RANGES = [
+      { label: "Under Rs. 15,000", min: 0, max: 14999 },
+      { label: "Rs. 15,000 – Rs. 30,000", min: 15000, max: 30000 },
+      { label: "Above Rs. 30,000", min: 30001, max: Infinity },
+    ];
+    const requested = new URLSearchParams(location.search).get("c");
+    const categoryKey = CATEGORIES[requested] ? requested : "";
+    const category = CATEGORIES[categoryKey] || ALL_CATEGORY;
+    const all = Object.entries(PRODUCTS).filter(([, p]) => !categoryKey || p.category === categoryKey);
+    const countEl = document.getElementById("category-count");
+    const emptyEl = document.getElementById("category-empty");
+
+    document.title = `${category.name} | Daula Attire`;
+    document.getElementById("category-title").textContent = category.name;
+    document.getElementById("category-hero").style.backgroundImage =
+      `linear-gradient(rgba(14, 11, 8, 0.45), rgba(14, 11, 8, 0.55)), url('${category.hero}')`;
+
+    // Category tabs: Shop All + one per category, current one highlighted
+    document.getElementById("category-tabs").innerHTML = [["", ALL_CATEGORY], ...Object.entries(CATEGORIES)]
+      .map(([key, c]) => {
+        const current = key === categoryKey;
+        return `<a href="category.html${key ? "?c=" + key : ""}"${current ? ' class="active" aria-current="page"' : ""}>${c.name}</a>`;
+      })
+      .join("");
+
+    // Build each dropdown's checkboxes from the products shown, with a count per option
+    const optionSets = {
+      category: categoryKey
+        ? []
+        : Object.entries(CATEGORIES).map(([key, c]) => ({ value: key, label: c.name, test: (p) => p.category === key })),
+      availability: [...new Set(all.map(([, p]) => p.availability))].map((v) => ({ value: v, label: v, test: (p) => p.availability === v })),
+      price: PRICE_RANGES.map((r) => ({ value: r.label, label: r.label, test: (p) => p.price >= r.min && p.price <= r.max })),
+      color: [...new Set(all.map(([, p]) => p.color))].sort().map((v) => ({ value: v, label: v, test: (p) => p.color === v })),
+    };
+    document.querySelector('[data-filter="category"]').hidden = Boolean(categoryKey);
+
+    Object.entries(optionSets).forEach(([key, options]) => {
+      const list = document.querySelector(`[data-filter="${key}"] .filter-options`);
+      list.innerHTML = options
+        .map((opt) => {
+          const count = all.filter(([, p]) => opt.test(p)).length;
+          return `<label><input type="checkbox" value="${opt.value}"${count ? "" : " disabled"}> ${opt.label} <span>(${count})</span></label>`;
+        })
+        .join("");
+    });
+
+    function renderCategory() {
+      const active = Object.fromEntries(
+        Object.keys(optionSets).map((key) => [
+          key,
+          [...document.querySelectorAll(`[data-filter="${key}"] input:checked`)].map((i) => i.value),
+        ])
+      );
+      const matches = all.filter(([, p]) =>
+        Object.entries(active).every(
+          ([key, values]) => !values.length || optionSets[key].some((opt) => values.includes(opt.value) && opt.test(p))
+        )
+      );
+
+      document.querySelectorAll("[data-filter]").forEach((box) => {
+        const n = active[box.dataset.filter].length;
+        box.querySelector(".filter-active").textContent = n ? `(${n})` : "";
+      });
+
+      categoryGrid.innerHTML = matches
+        .map(
+          ([id, p]) => `
+          <a class="related-card" href="product.html?id=${id}">
+            <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
+            <h3>${p.name}</h3>
+            <p>${formatPrice(p.price)}.00 PKR</p>
+          </a>`
+        )
+        .join("");
+      countEl.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
+      emptyEl.hidden = matches.length > 0;
+    }
+
+    // Leaving a dropdown with nothing to choose from would only confuse
+    Object.entries(optionSets).forEach(([key, options]) => {
+      if (!options.length) document.querySelector(`[data-filter="${key}"]`).hidden = true;
+    });
+
+    document.getElementById("category-filters").addEventListener("change", renderCategory);
+    document.getElementById("clear-filters").addEventListener("click", () => {
+      document.querySelectorAll("#category-filters input:checked").forEach((i) => (i.checked = false));
+      renderCategory();
+    });
+
+    // Only one dropdown open at a time; clicking outside closes them
+    const dropdowns = document.querySelectorAll(".filter-dropdown");
+    dropdowns.forEach((d) =>
+      d.addEventListener("toggle", () => {
+        if (d.open) dropdowns.forEach((other) => other !== d && (other.open = false));
+      })
+    );
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".filter-dropdown")) dropdowns.forEach((d) => (d.open = false));
+    });
+
+    renderCategory();
   }
 
   // Cart Page
@@ -536,8 +841,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const serviceCards = document.querySelectorAll(".service-card");
   serviceCards.forEach((card) => {
     card.addEventListener("click", () => {
-      const title = card.querySelector("span")?.textContent || "Bespoke Garment";
-      openModal(title.trim());
+      const title = (card.querySelector("span")?.textContent || "").trim();
+      const match = Object.entries(CATEGORIES).find(([, c]) => c.name.toLowerCase() === title.toLowerCase());
+      if (match) location.href = `category.html?c=${match[0]}`;
+      else openModal(title || "Bespoke Garment");
     });
   });
 
