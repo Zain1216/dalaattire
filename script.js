@@ -33,14 +33,51 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAllDrawers();
     navDrawer?.classList.add("active");
     drawerOverlay?.classList.add("active");
+    menuBtn?.setAttribute("aria-expanded", "true");
     document.body.style.overflow = "hidden";
+    setTimeout(() => {
+      navCloseBtn?.focus();
+    }, 50);
   }
 
   function closeAllDrawers() {
     navDrawer?.classList.remove("active");
     drawerOverlay?.classList.remove("active");
+    menuBtn?.setAttribute("aria-expanded", "false");
     document.body.style.overflow = "";
   }
+
+  // Auto-detect current active page in drawer
+  function updateActiveNavDrawerLink() {
+    if (!navDrawer) return;
+    const currentPath = window.location.pathname.toLowerCase();
+    const currentFile = currentPath.substring(currentPath.lastIndexOf("/") + 1) || "index.html";
+    const links = navDrawer.querySelectorAll(".nav-link-item");
+
+    links.forEach((link) => {
+      const page = link.getAttribute("data-page");
+      let isActive = false;
+
+      if (page === "home") {
+        isActive = currentFile === "index.html" || currentFile === "" || currentFile === "/" || currentPath.endsWith("/");
+      } else if (page === "about") {
+        isActive = currentFile.includes("about.html");
+      } else if (page === "services") {
+        isActive = currentFile.includes("services.html");
+      } else if (page === "contact") {
+        isActive = currentFile.includes("contact.html");
+      }
+
+      if (isActive) {
+        link.classList.add("active");
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.classList.remove("active");
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+  updateActiveNavDrawerLink();
 
   // Navigation Drawer Events
   menuBtn?.addEventListener("click", openNavDrawer);
@@ -51,8 +88,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const navLinks = navDrawer?.querySelectorAll("a");
   navLinks?.forEach((link) => {
     link.addEventListener("click", () => {
-      navDrawer.querySelectorAll(".nav-links a").forEach((a) => a.classList.remove("active"));
-      if (link.closest(".nav-links")) link.classList.add("active");
       closeAllDrawers();
     });
   });
@@ -731,6 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Consultation Modal Events
   function openModal(serviceTitle = "") {
     if (!appointmentModal) return;
+    closeAllDrawers();
     appointmentModal.classList.add("active");
     document.body.style.overflow = "hidden";
     if (serviceTitle) {
