@@ -371,7 +371,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateCartBadge(items = readCart()) {
     const count = items.reduce((sum, item) => sum + item.qty, 0);
-    document.querySelectorAll("#bag-btn .badge").forEach((badge) => (badge.textContent = count));
+    document.querySelectorAll("#bag-btn .badge").forEach((badge) => {
+      badge.textContent = count;
+      badge.classList.remove("bump");
+      void badge.offsetWidth; // trigger reflow for smooth re-animation
+      badge.classList.add("bump");
+    });
   }
 
   updateCartBadge();
@@ -547,18 +552,28 @@ document.addEventListener("DOMContentLoaded", () => {
         box.querySelector(".filter-active").textContent = n ? `(${n})` : "";
       });
 
-      categoryGrid.innerHTML = matches
-        .map(
-          ([id, p]) => `
-          <a class="related-card" href="product.html?id=${id}">
-            <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
-            <h3>${p.name}</h3>
-            <p>${formatPrice(p.price)}.00 PKR</p>
-          </a>`
-        )
-        .join("");
-      countEl.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
-      emptyEl.hidden = matches.length > 0;
+      categoryGrid.classList.add("is-fading");
+      setTimeout(() => {
+        categoryGrid.innerHTML = matches
+          .map(
+            ([id, p], idx) => `
+            <a class="related-card reveal" href="product.html?id=${id}" style="transition-delay: ${(idx % 6) * 0.08}s;">
+              <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
+              <h3>${p.name}</h3>
+              <p>${formatPrice(p.price)}.00 PKR</p>
+            </a>`
+          )
+          .join("");
+        countEl.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
+        emptyEl.hidden = matches.length > 0;
+        categoryGrid.classList.remove("is-fading");
+
+        if (window.__siteScrollObserver) {
+          categoryGrid.querySelectorAll(".reveal").forEach((el) => window.__siteScrollObserver.observe(el));
+        } else {
+          categoryGrid.querySelectorAll(".reveal").forEach((el) => el.classList.add("revealed"));
+        }
+      }, 150);
     }
 
     // Leaving a dropdown with nothing to choose from would only confuse
@@ -884,29 +899,94 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Scroll Reveal Animations via IntersectionObserver
-  const revealElements = document.querySelectorAll(".reveal");
+  // ==========================================================================
+  // Luxury Scroll Reveal & Automatic Grid Staggering
+  // ==========================================================================
+  const gridSelectors = [
+    ".service-grid",
+    ".gallery-grid",
+    ".promise-grid",
+    ".testimonial-grid",
+    ".category-grid",
+    ".related-grid",
+    ".intro-images",
+    ".craft-grid",
+    ".info-list",
+    ".why-choose",
+    ".contact-grid",
+    ".about-story",
+    ".elegance-grid"
+  ];
+
+  // Automatically assign staggered cascade delays to grid children
+  gridSelectors.forEach((selector) => {
+    document.querySelectorAll(selector).forEach((grid) => {
+      const items = Array.from(grid.children);
+      items.forEach((item, idx) => {
+        if (
+          !item.classList.contains("reveal") &&
+          !item.classList.contains("reveal-left") &&
+          !item.classList.contains("reveal-right") &&
+          !item.classList.contains("reveal-scale") &&
+          !item.classList.contains("reveal-fade")
+        ) {
+          item.classList.add("reveal");
+        }
+        item.style.transitionDelay = `${(idx % 6) * 0.1}s`;
+      });
+    });
+  });
+
+  const revealSelector = ".reveal, .reveal-left, .reveal-right, .reveal-scale, .reveal-fade";
+  const revealElements = document.querySelectorAll(revealSelector);
+
   if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
+    window.__siteScrollObserver = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
             entry.target.classList.add("revealed");
-            observer.unobserve(entry.target);
+          } else {
+            // When user scrolls back up and element leaves through the bottom of the screen,
+            // softly reset so it cascades and fades in again on next downward scroll
+            if (entry.boundingClientRect.top > 0) {
+              entry.target.classList.remove("revealed");
+            }
           }
         });
       },
       {
-        threshold: 0.12,
-        rootMargin: "0px 0px -40px 0px",
+        threshold: 0.08,
+        rootMargin: "0px 0px -25px 0px",
       }
     );
 
-    revealElements.forEach((el) => observer.observe(el));
+    revealElements.forEach((el) => window.__siteScrollObserver.observe(el));
   } else {
-    // Fallback for browsers without IntersectionObserver
+    // Fallback for older browsers
     revealElements.forEach((el) => el.classList.add("revealed"));
   }
+
+  // Floating Tailor Concierge Quick Action Widget
+  function initFloatingConcierge() {
+    if (document.querySelector(".floating-concierge")) return;
+    const concierge = document.createElement("a");
+    concierge.className = "floating-concierge";
+    concierge.href = "https://wa.me/92022305070?text=Hello%20Daula%20Attire%2C%20I%20would%20like%20to%20inquire%20about%20a%20bespoke%20appointment.";
+    concierge.target = "_blank";
+    concierge.rel = "noopener noreferrer";
+    concierge.setAttribute("aria-label", "Direct Bespoke Concierge via WhatsApp");
+    concierge.innerHTML = `
+      <div class="floating-concierge-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+        </svg>
+      </div>
+      <span>Direct Concierge</span>
+    `;
+    document.body.appendChild(concierge);
+  }
+  initFloatingConcierge();
 
   // Sticky header visual tweak on scroll
   const siteHeader = document.querySelector(".site-header");
@@ -915,10 +995,12 @@ document.addEventListener("DOMContentLoaded", () => {
     () => {
       if (window.scrollY > 40) {
         siteHeader?.style.setProperty("background", "rgba(18, 16, 14, 0.98)");
-        siteHeader?.style.setProperty("box-shadow", "0 4px 20px rgba(0, 0, 0, 0.4)");
+        siteHeader?.style.setProperty("box-shadow", "0 4px 20px rgba(0, 0, 0, 0.5)");
+        siteHeader?.style.setProperty("border-bottom-color", "rgba(200, 162, 101, 0.35)");
       } else {
         siteHeader?.style.setProperty("background", "rgba(18, 16, 14, 0.95)");
         siteHeader?.style.setProperty("box-shadow", "none");
+        siteHeader?.style.setProperty("border-bottom-color", "var(--border)");
       }
     },
     { passive: true }
