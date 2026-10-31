@@ -296,18 +296,39 @@ h1, h2, h3, h4, h5, h6 {
   min-height: 720px;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 64px max(6vw, 28px);
   background-size: cover;
-  background-position: center right;
+  background-position: center;
   border-bottom: 1px solid var(--border);
   position: relative;
+  z-index: 0;
   background-repeat: no-repeat;
   overflow: hidden;
 }
 
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 7, 6, 0.58);
+  z-index: 0;
+}
+
+.hero-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  z-index: 0;
+}
+
 .hero-content {
   max-width: 680px;
-  z-index: 1;
+  z-index: 2;
+  text-align: center;
 }
 
 .hero-content .eyebrow,
@@ -342,7 +363,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero h1 {
   max-width: 660px;
-  margin-bottom: 28px;
+  margin: 0 auto 28px;
   font-size: clamp(2.6rem, 5.2vw, 4.6rem);
   line-height: 1.12;
   letter-spacing: 0.04em;
@@ -352,7 +373,7 @@ h1, h2, h3, h4, h5, h6 {
 
 .hero-copy {
   max-width: 520px;
-  margin-bottom: 46px;
+  margin: 0 auto 46px;
   color: rgba(255, 255, 255, 0.82);
   line-height: 2;
   font-size: 0.8rem;
@@ -1809,18 +1830,15 @@ footer {
   border-bottom: 1px solid #6f6a64;
 }
 
-/* Photo sits on the right and fades into the dark background on its left edge */
 .page-hero::before {
   content: "";
   position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  aspect-ratio: 1050 / 935;
-  max-width: 100%;
-  background: var(--hero-img) center / cover no-repeat;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 30%);
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(21, 16, 13, 0.78) 0%, rgba(21, 16, 13, 0.42) 42%, rgba(21, 16, 13, 0.12) 76%, rgba(21, 16, 13, 0.08) 100%),
+    var(--hero-img) center / cover no-repeat;
+  -webkit-mask-image: none;
+  mask-image: none;
 }
 
 .page-hero-wide::before {
@@ -3727,7 +3745,7 @@ footer {
   }
   .hero {
     min-height: 650px;
-    background-position: 65% center;
+    background-position: center;
   }
   .section-shell {
     width: min(100% - 36px, 720px);
@@ -3794,8 +3812,8 @@ footer {
   }
   .hero {
     min-height: 600px;
-    align-items: flex-end;
-    padding-bottom: 60px;
+    align-items: center;
+    padding-bottom: 64px;
   }
   .hero h1 {
     font-size: 2.6rem;
