@@ -46,3 +46,24 @@ CREATE TABLE IF NOT EXISTS admins (
   password_hash  VARCHAR(255) NOT NULL,
   created_at     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Login sessions for the admin app (only a hash of each token is stored)
+CREATE TABLE IF NOT EXISTS admin_tokens (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  admin_id    INT UNSIGNED NOT NULL,
+  token_hash  CHAR(64)     NOT NULL UNIQUE,
+  expires_at  DATETIME     NOT NULL,
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_tokens_admin FOREIGN KEY (admin_id) REFERENCES admins (id) ON DELETE CASCADE,
+  INDEX idx_tokens_expiry (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Failed logins, used to slow down password guessing
+CREATE TABLE IF NOT EXISTS admin_login_attempts (
+  id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  ip            VARCHAR(45)  NOT NULL,
+  username      VARCHAR(60)  NOT NULL,
+  attempted_at  DATETIME     NOT NULL,
+  INDEX idx_attempts_ip (ip, attempted_at),
+  INDEX idx_attempts_user (username, attempted_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

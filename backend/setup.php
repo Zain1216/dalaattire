@@ -2,7 +2,7 @@
 // One-time local setup from the command line:
 //   php backend/setup.php            creates the database, tables and starting catalog
 //   php backend/setup.php --reset    drops and rebuilds the catalog tables (deletes admin edits!)
-// Admin accounts are created afterwards at /admin/setup.php.
+// The admin account is created afterwards by opening the admin app (/admin/).
 
 declare(strict_types=1);
 require __DIR__ . '/bootstrap.php';
@@ -56,4 +56,4 @@ if ($count === 0) {
 $admins = (int) $pdo->query('SELECT COUNT(*) FROM admins')->fetchColumn();
 echo $admins
     ? "Done.\n"
-    : "Done. Next: open /admin/setup.php in your browser to create the admin account.\n";
+    : "Done. Next: open /admin/ in your browser to create the admin account.\n";

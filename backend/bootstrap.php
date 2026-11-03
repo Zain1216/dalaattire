@@ -82,16 +82,13 @@ function site_url(string $path): string
     return ($site !== '' ? $site : '..') . '/' . ltrim($path, '/');
 }
 
-/** Image src for the admin panel: uploads live next to the admin, built-in photos on the storefront. */
-function admin_image_src(string $path): string
+/**
+ * Image URL for the admin app, which may run on GitHub Pages or on Hostinger:
+ * uploads get a full backend URL, built-in photos are loaded from the storefront.
+ */
+function admin_image_url(string $path): string
 {
-    return is_upload($path) ? '../' . $path : site_url($path);
-}
-
-/** Escape text for HTML output. */
-function e(?string $value): string
-{
-    return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+    return is_upload($path) ? backend_url() . '/' . $path : site_url($path);
 }
 
 /** URL-friendly slug: "Gold Groom Sherwani" -> "gold-groom-sherwani". */

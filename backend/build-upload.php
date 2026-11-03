@@ -1,6 +1,7 @@
 <?php
-// Builds hostinger-upload.zip in the project root: the backend/, admin/ and uploads/ folders
+// Builds hostinger-upload.zip in the project root: the backend/ and uploads/ folders,
 // ready to extract into the "daula-attire" folder on Hostinger.
+// The admin app (admin/) is plain HTML/JS served by GitHub Pages, so it is not part of the upload.
 // Leaves out the local config.php and any uploaded photos. If backend/config.hostinger.php exists,
 // it goes into the zip as backend/config.php, so the live settings arrive ready to use.
 //   php backend/build-upload.php
@@ -23,7 +24,7 @@ if ($zip->open($zipPath, ZipArchive::CREATE) !== true) {
 
 $skip = ['backend/config.php', 'backend/config.hostinger.php', 'backend/build-upload.php'];
 $count = 0;
-foreach (['backend', 'admin'] as $folder) {
+foreach (['backend'] as $folder) {
     $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($root . '/' . $folder, FilesystemIterator::SKIP_DOTS));
     foreach ($files as $file) {
         $rel = str_replace('\\', '/', substr($file->getPathname(), strlen($root) + 1));

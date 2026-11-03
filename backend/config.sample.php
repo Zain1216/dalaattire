@@ -21,6 +21,16 @@ return [
     // Leave empty to work it out from the request (fine on most hosts).
     'backend_url' => '',           // live: 'https://subscription.zainulabideen.tech/daula-attire'
 
+    // Websites allowed to use the admin API (the admin app on GitHub Pages, and this backend itself).
+    // localhost / 127.0.0.1 on any port are always allowed, for working on your computer.
+    'allowed_origins' => [
+        'https://zain1216.github.io',
+        'https://subscription.zainulabideen.tech',
+    ],
+
+    // How long an admin stays logged in, in hours.
+    'session_hours' => 12,
+
     // Where admin uploads are saved, relative to the backend folder's root.
     'upload_dir' => 'uploads/products',
 

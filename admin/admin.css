@@ -92,3 +92,8 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
   .edit-grid, .cat-card { grid-template-columns: 1fr; }
   .form .row { grid-template-columns: 1fr; }
 }
+
+[hidden] { display: none !important; }
+.loading { padding: 40px 0; text-align: center; }
+button:disabled { opacity: 0.6; cursor: wait; }
+.cat-hero:not([src]), .cat-hero[src=""] { background: var(--input); }

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin | Daula Attire</title>
+  <link rel="icon" href="../assets/daula-logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <!--
+    Daula Attire admin app. Plain HTML + JS, so GitHub Pages can serve it.
+    All data comes from the PHP admin API on Hostinger (backend/api/admin.php).
+  -->
+  <header class="admin-bar" id="admin-bar" hidden>
+    <a href="#/products" class="admin-brand">DAULA ATTIRE <span>Admin</span></a>
+    <nav>
+      <a href="#/products" data-nav="products">Products</a>
+      <a href="#/categories" data-nav="categories">Categories</a>
+      <a href="../category.html" target="_blank" rel="noopener">View Site</a>
+      <button type="button" id="logout-btn">Log Out</button>
+    </nav>
+  </header>
+
+  <main class="admin-main">
+    <div id="flash-area" aria-live="polite"></div>
+    <div id="view"><p class="muted loading">Loading&hellip;</p></div>
+  </main>
+</body>
+</html>
