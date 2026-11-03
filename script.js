@@ -347,6 +347,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const ORDER_EMAIL = "info@daulattire.com";
   const ORDER_WHATSAPP = "";
 
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+  }
+
   function formatPrice(amount) {
     return "Rs. " + amount.toLocaleString("en-US");
   }
@@ -389,393 +393,431 @@ document.addEventListener("DOMContentLoaded", () => {
     if (e.key === "Escape") document.querySelectorAll(".modal.active").forEach((m) => m.classList.remove("active"));
   });
 
-  // Product Page
-  const productView = document.getElementById("product-view");
-  if (productView) {
-    const requested = new URLSearchParams(location.search).get("id");
-    const productId = PRODUCTS[requested] ? requested : DEFAULT_PRODUCT;
-    const product = PRODUCTS[productId];
-    const mainImg = document.getElementById("product-main-img");
-    const thumbs = document.getElementById("product-thumbs");
-    const qtyEl = document.getElementById("product-qty");
-    let quantity = 1;
-    let size = "S";
+  // ==========================================================================
+  // Live catalog: load categories & products from the backend (MySQL) when it is
+  // available, otherwise keep the built-in list above (e.g. on GitHub Pages).
+  // ==========================================================================
+  // The live site is on GitHub Pages, which cannot run PHP, so it asks the Hostinger backend.
+  // When the site itself is served with PHP (local XAMPP / php -S), the backend sits right next to it.
+  const BACKEND_URL = "https://subscription.zainulabideen.tech/daula-attire";
+  const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
+  const CATALOG_URL = isLocal ? "backend/api/catalog.php" : `${BACKEND_URL}/backend/api/catalog.php`;
 
-    document.title = `${product.name} | Daula Attire`;
-    document.getElementById("product-name").textContent = product.name;
-    const categoryLink = document.getElementById("product-category");
-    categoryLink.textContent = CATEGORIES[product.category].name;
-    categoryLink.href = `category.html?c=${product.category}`;
-    document.getElementById("product-desc").textContent = product.description;
-    document.getElementById("product-price").textContent = formatPrice(product.price);
-    mainImg.src = product.images[0];
-    mainImg.alt = product.name;
+  function replaceContents(target, source) {
+    Object.keys(target).forEach((key) => delete target[key]);
+    Object.assign(target, source);
+  }
 
-    product.images.forEach((src, i) => {
-      const thumb = document.createElement("button");
-      thumb.type = "button";
-      thumb.className = i === 0 ? "active" : "";
-      thumb.setAttribute("aria-label", `Show photo ${i + 1}`);
-      thumb.innerHTML = `<img src="${src}" alt="">`;
-      thumb.addEventListener("click", () => {
-        mainImg.src = src;
-        thumbs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === thumb));
+  async function loadCatalog() {
+    try {
+      const res = await fetch(CATALOG_URL, { headers: { Accept: "application/json" } });
+      if (!res.ok || !(res.headers.get("content-type") || "").includes("application/json")) return;
+      const data = await res.json();
+      if (data.categories && data.products && Object.keys(data.products).length) {
+        replaceContents(CATEGORIES, data.categories);
+        replaceContents(PRODUCTS, data.products);
+      }
+    } catch {
+      // Backend not reachable: the built-in catalog stays in place
+    }
+  }
+
+  loadCatalog().then(() => {
+    updateCartBadge();
+    initShopPages();
+  });
+
+  function initShopPages() {
+    // Product Page
+    const productView = document.getElementById("product-view");
+    if (productView) {
+      const requested = new URLSearchParams(location.search).get("id");
+      const productId = PRODUCTS[requested] ? requested : PRODUCTS[DEFAULT_PRODUCT] ? DEFAULT_PRODUCT : Object.keys(PRODUCTS)[0];
+      const product = PRODUCTS[productId];
+      const mainImg = document.getElementById("product-main-img");
+      const thumbs = document.getElementById("product-thumbs");
+      const qtyEl = document.getElementById("product-qty");
+      let quantity = 1;
+      let size = "S";
+  
+      document.title = `${product.name} | Daula Attire`;
+      document.getElementById("product-name").textContent = product.name;
+      const categoryLink = document.getElementById("product-category");
+      if (categoryLink) {
+        categoryLink.textContent = CATEGORIES[product.category]?.name || "Shop";
+        categoryLink.href = `category.html?c=${product.category}`;
+      }
+      document.getElementById("product-desc").textContent = product.description;
+      document.getElementById("product-price").textContent = formatPrice(product.price);
+      mainImg.src = product.images[0];
+      mainImg.alt = product.name;
+  
+      product.images.forEach((src, i) => {
+        const thumb = document.createElement("button");
+        thumb.type = "button";
+        thumb.className = i === 0 ? "active" : "";
+        thumb.setAttribute("aria-label", `Show photo ${i + 1}`);
+        thumb.innerHTML = `<img src="${src}" alt="">`;
+        thumb.addEventListener("click", () => {
+          mainImg.src = src;
+          thumbs.querySelectorAll("button").forEach((b) => b.classList.toggle("active", b === thumb));
+        });
+        thumbs.appendChild(thumb);
       });
-      thumbs.appendChild(thumb);
-    });
-
-    productView.querySelectorAll(".size-options button").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        size = btn.dataset.size;
-        productView.querySelectorAll(".size-options button").forEach((b) => {
-          b.classList.toggle("active", b === btn);
-          b.setAttribute("aria-checked", String(b === btn));
+  
+      productView.querySelectorAll(".size-options button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          size = btn.dataset.size;
+          productView.querySelectorAll(".size-options button").forEach((b) => {
+            b.classList.toggle("active", b === btn);
+            b.setAttribute("aria-checked", String(b === btn));
+          });
         });
       });
-    });
-
-    productView.querySelectorAll("[data-qty]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        quantity = Math.min(10, Math.max(1, quantity + Number(btn.dataset.qty)));
-        qtyEl.textContent = quantity;
+  
+      productView.querySelectorAll("[data-qty]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          quantity = Math.min(10, Math.max(1, quantity + Number(btn.dataset.qty)));
+          qtyEl.textContent = quantity;
+        });
       });
-    });
-
-    document.getElementById("size-guide-btn")?.addEventListener("click", () => {
-      document.getElementById("size-guide-modal")?.classList.add("active");
-    });
-
-    document.getElementById("add-to-cart-btn")?.addEventListener("click", () => {
-      const items = readCart();
-      const existing = items.find((item) => item.id === productId && item.size === size);
-      if (existing) existing.qty += quantity;
-      else items.push({ id: productId, size, qty: quantity });
-      writeCart(items);
-      showToast(`${product.name} (${size}) added to your cart.`);
-    });
-
-    document.getElementById("share-btn")?.addEventListener("click", async () => {
-      const url = location.href;
-      try {
-        if (navigator.share) await navigator.share({ title: product.name, url });
-        else {
-          await navigator.clipboard.writeText(url);
-          showToast("Product link copied.");
+  
+      document.getElementById("size-guide-btn")?.addEventListener("click", () => {
+        document.getElementById("size-guide-modal")?.classList.add("active");
+      });
+  
+      document.getElementById("add-to-cart-btn")?.addEventListener("click", () => {
+        const items = readCart();
+        const existing = items.find((item) => item.id === productId && item.size === size);
+        if (existing) existing.qty += quantity;
+        else items.push({ id: productId, size, qty: quantity });
+        writeCart(items);
+        showToast(`${product.name} (${size}) added to your cart.`);
+      });
+  
+      document.getElementById("share-btn")?.addEventListener("click", async () => {
+        const url = location.href;
+        try {
+          if (navigator.share) await navigator.share({ title: product.name, url });
+          else {
+            await navigator.clipboard.writeText(url);
+            showToast("Product link copied.");
+          }
+        } catch {
+          // Share sheet dismissed
         }
-      } catch {
-        // Share sheet dismissed
-      }
-    });
-
-    const related = document.getElementById("related-grid");
-    // Same category first, then the rest of the catalog
-    Object.entries(PRODUCTS)
-      .filter(([id]) => id !== productId)
-      .sort(([, x], [, y]) => (y.category === product.category) - (x.category === product.category))
-      .slice(0, 6)
-      .forEach(([id, item]) => {
-        const card = document.createElement("a");
-        card.className = "related-card reveal revealed";
-        card.href = `product.html?id=${id}`;
-        card.innerHTML = `
-          <img src="${item.images[0]}" alt="${item.name}" loading="lazy">
-          <h3>${item.name}</h3>
-          <p>${formatPrice(item.price)}.00 PKR</p>`;
-        related?.appendChild(card);
       });
-  }
-
-  // Category Page: product grid with Availability / Price / Colors filters
-  const categoryGrid = document.getElementById("category-grid");
-  if (categoryGrid) {
-    const PRICE_RANGES = [
-      { label: "Under Rs. 15,000", min: 0, max: 14999 },
-      { label: "Rs. 15,000 – Rs. 30,000", min: 15000, max: 30000 },
-      { label: "Above Rs. 30,000", min: 30001, max: Infinity },
-    ];
-    const requested = new URLSearchParams(location.search).get("c");
-    const categoryKey = CATEGORIES[requested] ? requested : "";
-    const category = CATEGORIES[categoryKey] || ALL_CATEGORY;
-    const all = Object.entries(PRODUCTS).filter(([, p]) => !categoryKey || p.category === categoryKey);
-    const countEl = document.getElementById("category-count");
-    const emptyEl = document.getElementById("category-empty");
-
-    document.title = `${category.name} | Daula Attire`;
-    document.getElementById("category-title").textContent = category.name;
-    document.getElementById("category-hero").style.backgroundImage =
-      `linear-gradient(rgba(14, 11, 8, 0.45), rgba(14, 11, 8, 0.55)), url('${category.hero}')`;
-
-    // Category tabs: Shop All + one per category, current one highlighted
-    document.getElementById("category-tabs").innerHTML = [["", ALL_CATEGORY], ...Object.entries(CATEGORIES)]
-      .map(([key, c]) => {
-        const current = key === categoryKey;
-        return `<a href="category.html${key ? "?c=" + key : ""}"${current ? ' class="active" aria-current="page"' : ""}>${c.name}</a>`;
-      })
-      .join("");
-
-    // Build each dropdown's checkboxes from the products shown, with a count per option
-    const optionSets = {
-      category: categoryKey
-        ? []
-        : Object.entries(CATEGORIES).map(([key, c]) => ({ value: key, label: c.name, test: (p) => p.category === key })),
-      availability: [...new Set(all.map(([, p]) => p.availability))].map((v) => ({ value: v, label: v, test: (p) => p.availability === v })),
-      price: PRICE_RANGES.map((r) => ({ value: r.label, label: r.label, test: (p) => p.price >= r.min && p.price <= r.max })),
-      color: [...new Set(all.map(([, p]) => p.color))].sort().map((v) => ({ value: v, label: v, test: (p) => p.color === v })),
-    };
-    document.querySelector('[data-filter="category"]').hidden = Boolean(categoryKey);
-
-    Object.entries(optionSets).forEach(([key, options]) => {
-      const list = document.querySelector(`[data-filter="${key}"] .filter-options`);
-      list.innerHTML = options
-        .map((opt) => {
-          const count = all.filter(([, p]) => opt.test(p)).length;
-          return `<label><input type="checkbox" value="${opt.value}"${count ? "" : " disabled"}> ${opt.label} <span>(${count})</span></label>`;
+  
+      const related = document.getElementById("related-grid");
+      // Same category first, then the rest of the catalog
+      Object.entries(PRODUCTS)
+        .filter(([id]) => id !== productId)
+        .sort(([, x], [, y]) => (y.category === product.category) - (x.category === product.category))
+        .slice(0, 6)
+        .forEach(([id, item]) => {
+          const card = document.createElement("a");
+          card.className = "related-card reveal revealed";
+          card.href = `product.html?id=${id}`;
+          card.innerHTML = `
+            <img src="${escapeHtml(item.images[0])}" alt="${escapeHtml(item.name)}" loading="lazy">
+            <h3>${escapeHtml(item.name)}</h3>
+            <p>${formatPrice(item.price)}.00 PKR</p>`;
+          related?.appendChild(card);
+        });
+    }
+  
+    // Category Page: product grid with Availability / Price / Colors filters
+    const categoryGrid = document.getElementById("category-grid");
+    if (categoryGrid) {
+      const PRICE_RANGES = [
+        { label: "Under Rs. 15,000", min: 0, max: 14999 },
+        { label: "Rs. 15,000 – Rs. 30,000", min: 15000, max: 30000 },
+        { label: "Above Rs. 30,000", min: 30001, max: Infinity },
+      ];
+      const requested = new URLSearchParams(location.search).get("c");
+      const categoryKey = CATEGORIES[requested] ? requested : "";
+      const category = CATEGORIES[categoryKey] || ALL_CATEGORY;
+      const all = Object.entries(PRODUCTS).filter(([, p]) => !categoryKey || p.category === categoryKey);
+      const countEl = document.getElementById("category-count");
+      const emptyEl = document.getElementById("category-empty");
+  
+      document.title = `${category.name} | Daula Attire`;
+      document.getElementById("category-title").textContent = category.name;
+      document.getElementById("category-hero").style.backgroundImage =
+        `linear-gradient(rgba(14, 11, 8, 0.45), rgba(14, 11, 8, 0.55)), url('${category.hero}')`;
+  
+      // Category tabs: Shop All + one per category, current one highlighted
+      document.getElementById("category-tabs").innerHTML = [["", ALL_CATEGORY], ...Object.entries(CATEGORIES)]
+        .map(([key, c]) => {
+          const current = key === categoryKey;
+          return `<a href="category.html${key ? "?c=" + key : ""}"${current ? ' class="active" aria-current="page"' : ""}>${escapeHtml(c.name)}</a>`;
         })
         .join("");
-    });
-
-    function renderCategory() {
-      const active = Object.fromEntries(
-        Object.keys(optionSets).map((key) => [
-          key,
-          [...document.querySelectorAll(`[data-filter="${key}"] input:checked`)].map((i) => i.value),
-        ])
-      );
-      const matches = all.filter(([, p]) =>
-        Object.entries(active).every(
-          ([key, values]) => !values.length || optionSets[key].some((opt) => values.includes(opt.value) && opt.test(p))
-        )
-      );
-
-      document.querySelectorAll("[data-filter]").forEach((box) => {
-        const n = active[box.dataset.filter].length;
-        box.querySelector(".filter-active").textContent = n ? `(${n})` : "";
-      });
-
-      categoryGrid.classList.add("is-fading");
-      setTimeout(() => {
-        categoryGrid.innerHTML = matches
-          .map(
-            ([id, p], idx) => `
-            <a class="related-card reveal" href="product.html?id=${id}" style="transition-delay: ${(idx % 6) * 0.08}s;">
-              <img src="${p.images[0]}" alt="${p.name}" loading="lazy">
-              <h3>${p.name}</h3>
-              <p>${formatPrice(p.price)}.00 PKR</p>
-            </a>`
-          )
+  
+      // Build each dropdown's checkboxes from the products shown, with a count per option
+      const optionSets = {
+        category: categoryKey
+          ? []
+          : Object.entries(CATEGORIES).map(([key, c]) => ({ value: key, label: c.name, test: (p) => p.category === key })),
+        availability: [...new Set(all.map(([, p]) => p.availability))].map((v) => ({ value: v, label: v, test: (p) => p.availability === v })),
+        price: PRICE_RANGES.map((r) => ({ value: r.label, label: r.label, test: (p) => p.price >= r.min && p.price <= r.max })),
+        color: [...new Set(all.map(([, p]) => p.color))].sort().map((v) => ({ value: v, label: v, test: (p) => p.color === v })),
+      };
+      document.querySelector('[data-filter="category"]').hidden = Boolean(categoryKey);
+  
+      Object.entries(optionSets).forEach(([key, options]) => {
+        const list = document.querySelector(`[data-filter="${key}"] .filter-options`);
+        list.innerHTML = options
+          .map((opt) => {
+            const count = all.filter(([, p]) => opt.test(p)).length;
+            return `<label><input type="checkbox" value="${escapeHtml(opt.value)}"${count ? "" : " disabled"}> ${escapeHtml(opt.label)} <span>(${count})</span></label>`;
+          })
           .join("");
-        countEl.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
-        emptyEl.hidden = matches.length > 0;
-        categoryGrid.classList.remove("is-fading");
-
-        if (window.__siteScrollObserver) {
-          categoryGrid.querySelectorAll(".reveal").forEach((el) => window.__siteScrollObserver.observe(el));
-        } else {
-          categoryGrid.querySelectorAll(".reveal").forEach((el) => el.classList.add("revealed"));
-        }
-      }, 150);
-    }
-
-    // Leaving a dropdown with nothing to choose from would only confuse
-    Object.entries(optionSets).forEach(([key, options]) => {
-      if (!options.length) document.querySelector(`[data-filter="${key}"]`).hidden = true;
-    });
-
-    document.getElementById("category-filters").addEventListener("change", renderCategory);
-    document.getElementById("clear-filters").addEventListener("click", () => {
-      document.querySelectorAll("#category-filters input:checked").forEach((i) => (i.checked = false));
-      renderCategory();
-    });
-
-    // Only one dropdown open at a time; clicking outside closes them
-    const dropdowns = document.querySelectorAll(".filter-dropdown");
-    dropdowns.forEach((d) =>
-      d.addEventListener("toggle", () => {
-        if (d.open) dropdowns.forEach((other) => other !== d && (other.open = false));
-      })
-    );
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".filter-dropdown")) dropdowns.forEach((d) => (d.open = false));
-    });
-
-    renderCategory();
-  }
-
-  // Cart Page
-  const cartPage = document.getElementById("cart-page");
-  if (cartPage) {
-    const list = document.getElementById("cart-items");
-    const empty = document.getElementById("cart-empty");
-
-    function renderCart() {
-      const items = readCart();
-      const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
-      list.innerHTML = "";
-      empty.hidden = items.length > 0;
-
-      items.forEach((item, index) => {
-        const product = PRODUCTS[item.id];
-        const row = document.createElement("div");
-        row.className = "cart-row";
-        row.innerHTML = `
-          <div class="cart-product">
-            <a href="product.html?id=${item.id}"><img src="${product.images[0]}" alt="${product.name}"></a>
-            <div>
-              <a href="product.html?id=${item.id}" class="cart-name">${product.name}</a>
-              <span class="size-tag">${item.size}</span>
-              <button type="button" class="cart-remove" data-remove="${index}">Remove</button>
-            </div>
-          </div>
-          <span class="cart-price"><small>Price</small>${formatPrice(product.price)}</span>
-          <div class="qty-stepper">
-            <button type="button" data-step="-1" data-index="${index}" aria-label="Decrease quantity">&minus;</button>
-            <span>${item.qty}</span>
-            <button type="button" data-step="1" data-index="${index}" aria-label="Increase quantity">+</button>
-          </div>
-          <span class="cart-line-total"><small>Total</small>${formatPrice(product.price * item.qty)}</span>`;
-        list.appendChild(row);
       });
-
-      document.getElementById("cart-subtotal").textContent = formatPrice(subtotal);
-      document.getElementById("cart-total").textContent = formatPrice(subtotal);
-    }
-
-    list.addEventListener("click", (e) => {
-      const btn = e.target.closest("button");
-      if (!btn) return;
-      const items = readCart();
-      if (btn.dataset.remove !== undefined) {
-        items.splice(Number(btn.dataset.remove), 1);
-      } else if (btn.dataset.step) {
-        const item = items[Number(btn.dataset.index)];
-        item.qty = Math.min(10, item.qty + Number(btn.dataset.step));
-        if (item.qty < 1) items.splice(Number(btn.dataset.index), 1);
+  
+      function renderCategory() {
+        const active = Object.fromEntries(
+          Object.keys(optionSets).map((key) => [
+            key,
+            [...document.querySelectorAll(`[data-filter="${key}"] input:checked`)].map((i) => i.value),
+          ])
+        );
+        const matches = all.filter(([, p]) =>
+          Object.entries(active).every(
+            ([key, values]) => !values.length || optionSets[key].some((opt) => values.includes(opt.value) && opt.test(p))
+          )
+        );
+  
+        document.querySelectorAll("[data-filter]").forEach((box) => {
+          const n = active[box.dataset.filter].length;
+          box.querySelector(".filter-active").textContent = n ? `(${n})` : "";
+        });
+  
+        categoryGrid.classList.add("is-fading");
+        setTimeout(() => {
+          categoryGrid.innerHTML = matches
+            .map(
+              ([id, p], idx) => `
+              <a class="related-card reveal" href="product.html?id=${id}" style="transition-delay: ${(idx % 6) * 0.08}s;">
+                <img src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.name)}" loading="lazy">
+                <h3>${escapeHtml(p.name)}</h3>
+                <p>${formatPrice(p.price)}.00 PKR</p>
+              </a>`
+            )
+            .join("");
+          countEl.textContent = `${matches.length} ${matches.length === 1 ? "product" : "products"}`;
+          emptyEl.hidden = matches.length > 0;
+          categoryGrid.classList.remove("is-fading");
+  
+          if (window.__siteScrollObserver) {
+            categoryGrid.querySelectorAll(".reveal").forEach((el) => window.__siteScrollObserver.observe(el));
+          } else {
+            categoryGrid.querySelectorAll(".reveal").forEach((el) => el.classList.add("revealed"));
+          }
+        }, 150);
       }
-      writeCart(items);
-      renderCart();
-    });
-
-    const couponInput = document.getElementById("coupon-code");
-    try {
-      couponInput.value = sessionStorage.getItem(COUPON_KEY) || "";
-    } catch {
-      // Storage unavailable
+  
+      // Leaving a dropdown with nothing to choose from would only confuse
+      Object.entries(optionSets).forEach(([key, options]) => {
+        if (!options.length) document.querySelector(`[data-filter="${key}"]`).hidden = true;
+      });
+  
+      document.getElementById("category-filters").addEventListener("change", renderCategory);
+      document.getElementById("clear-filters").addEventListener("click", () => {
+        document.querySelectorAll("#category-filters input:checked").forEach((i) => (i.checked = false));
+        renderCategory();
+      });
+  
+      // Only one dropdown open at a time; clicking outside closes them
+      const dropdowns = document.querySelectorAll(".filter-dropdown");
+      dropdowns.forEach((d) =>
+        d.addEventListener("toggle", () => {
+          if (d.open) dropdowns.forEach((other) => other !== d && (other.open = false));
+        })
+      );
+      document.addEventListener("click", (e) => {
+        if (!e.target.closest(".filter-dropdown")) dropdowns.forEach((d) => (d.open = false));
+      });
+  
+      renderCategory();
     }
-
-    document.getElementById("checkout-btn")?.addEventListener("click", () => {
-      if (!readCart().length) {
-        showToast("Your cart is empty.");
-        return;
-      }
-      try {
-        sessionStorage.setItem(COUPON_KEY, couponInput.value.trim());
-      } catch {
-        // Storage unavailable: coupon is not carried over
-      }
-      location.href = "checkout.html";
-    });
-
-    renderCart();
-  }
-
-  // Checkout Page
-  const checkoutPage = document.getElementById("checkout-page");
-  // An empty cart has nothing to check out
-  if (checkoutPage && !readCart().length) {
-    location.replace("cart.html");
-  } else if (checkoutPage) {
-    const form = document.getElementById("checkout-form");
-    const errorEl = document.getElementById("checkout-error");
-    const items = readCart();
-    let coupon = "";
-    try {
-      coupon = sessionStorage.getItem(COUPON_KEY) || "";
-    } catch {
-      // Storage unavailable
-    }
-
-    const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
-    const total = subtotal + SHIPPING_FEE;
-
-    document.getElementById("checkout-items").innerHTML = items
-      .map((item) => {
-        const product = PRODUCTS[item.id];
-        return `
-          <li>
-            <img src="${product.images[0]}" alt="">
-            <div>
-              <span class="checkout-item-name">${product.name}</span>
-              <small>Size ${item.size} &middot; Qty ${item.qty}</small>
-            </div>
-            <strong>${formatPrice(product.price * item.qty)}</strong>
-          </li>`;
-      })
-      .join("");
-    document.getElementById("checkout-subtotal").textContent = formatPrice(subtotal);
-    document.getElementById("checkout-shipping").textContent = SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free";
-    document.getElementById("checkout-total").textContent = formatPrice(total);
-    if (coupon) {
-      document.getElementById("checkout-coupon-row").hidden = false;
-      document.getElementById("checkout-coupon").textContent = coupon;
-    }
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      form.classList.add("was-validated");
-      const firstInvalid = form.querySelector(":invalid");
-      if (firstInvalid) {
-        errorEl.textContent = "Please fill in the highlighted fields.";
-        errorEl.hidden = false;
-        firstInvalid.focus();
-        return;
-      }
-      errorEl.hidden = true;
-
-      const data = Object.fromEntries(new FormData(form));
-      const orderNumber = "DA-" + Date.now().toString().slice(-6);
-      const lines = [
-        `New order ${orderNumber}`,
-        "",
-        ...items.map((item) => {
+  
+    // Cart Page
+    const cartPage = document.getElementById("cart-page");
+    if (cartPage) {
+      const list = document.getElementById("cart-items");
+      const empty = document.getElementById("cart-empty");
+  
+      function renderCart() {
+        const items = readCart();
+        const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
+        list.innerHTML = "";
+        empty.hidden = items.length > 0;
+  
+        items.forEach((item, index) => {
           const product = PRODUCTS[item.id];
-          return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(product.price * item.qty)}`;
-        }),
-        "",
-        `Subtotal: ${formatPrice(subtotal)}`,
-        `Shipping: ${SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free"}`,
-        coupon ? `Coupon: ${coupon}` : null,
-        `Total: ${formatPrice(total)}`,
-        `Payment: ${data.payment}`,
-        "",
-        `Name: ${data.name}`,
-        `Phone: ${data.phone}`,
-        data.email ? `Email: ${data.email}` : null,
-        `Address: ${data.address}, ${data.city}${data.postal ? " " + data.postal : ""}`,
-        data.notes ? `Notes: ${data.notes}` : null,
-      ].filter((line) => line !== null);
-      const message = lines.join("\n");
-
-      document.getElementById("order-number").textContent = orderNumber;
-      document.getElementById("order-phone").textContent = data.phone;
-      document.getElementById("order-email-btn").href =
-        `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent("Order " + orderNumber)}&body=${encodeURIComponent(message)}`;
-      if (ORDER_WHATSAPP) {
-        const whatsappBtn = document.getElementById("order-whatsapp-btn");
-        whatsappBtn.href = `https://wa.me/${ORDER_WHATSAPP}?text=${encodeURIComponent(message)}`;
-        whatsappBtn.hidden = false;
+          const row = document.createElement("div");
+          row.className = "cart-row";
+          row.innerHTML = `
+            <div class="cart-product">
+              <a href="product.html?id=${item.id}"><img src="${escapeHtml(product.images[0])}" alt="${escapeHtml(product.name)}"></a>
+              <div>
+                <a href="product.html?id=${item.id}" class="cart-name">${escapeHtml(product.name)}</a>
+                <span class="size-tag">${item.size}</span>
+                <button type="button" class="cart-remove" data-remove="${index}">Remove</button>
+              </div>
+            </div>
+            <span class="cart-price"><small>Price</small>${formatPrice(product.price)}</span>
+            <div class="qty-stepper">
+              <button type="button" data-step="-1" data-index="${index}" aria-label="Decrease quantity">&minus;</button>
+              <span>${item.qty}</span>
+              <button type="button" data-step="1" data-index="${index}" aria-label="Increase quantity">+</button>
+            </div>
+            <span class="cart-line-total"><small>Total</small>${formatPrice(product.price * item.qty)}</span>`;
+          list.appendChild(row);
+        });
+  
+        document.getElementById("cart-subtotal").textContent = formatPrice(subtotal);
+        document.getElementById("cart-total").textContent = formatPrice(subtotal);
       }
-
-      writeCart([]);
+  
+      list.addEventListener("click", (e) => {
+        const btn = e.target.closest("button");
+        if (!btn) return;
+        const items = readCart();
+        if (btn.dataset.remove !== undefined) {
+          items.splice(Number(btn.dataset.remove), 1);
+        } else if (btn.dataset.step) {
+          const item = items[Number(btn.dataset.index)];
+          item.qty = Math.min(10, item.qty + Number(btn.dataset.step));
+          if (item.qty < 1) items.splice(Number(btn.dataset.index), 1);
+        }
+        writeCart(items);
+        renderCart();
+      });
+  
+      const couponInput = document.getElementById("coupon-code");
       try {
-        sessionStorage.removeItem(COUPON_KEY);
+        couponInput.value = sessionStorage.getItem(COUPON_KEY) || "";
       } catch {
         // Storage unavailable
       }
-      document.getElementById("checkout-layout").hidden = true;
-      checkoutPage.querySelector("h1").hidden = true;
-      document.getElementById("order-done").hidden = false;
-      window.scrollTo({ top: 0 });
-    });
+  
+      document.getElementById("checkout-btn")?.addEventListener("click", () => {
+        if (!readCart().length) {
+          showToast("Your cart is empty.");
+          return;
+        }
+        try {
+          sessionStorage.setItem(COUPON_KEY, couponInput.value.trim());
+        } catch {
+          // Storage unavailable: coupon is not carried over
+        }
+        location.href = "checkout.html";
+      });
+  
+      renderCart();
+    }
+  
+    // Checkout Page
+    const checkoutPage = document.getElementById("checkout-page");
+    // An empty cart has nothing to check out
+    if (checkoutPage && !readCart().length) {
+      location.replace("cart.html");
+    } else if (checkoutPage) {
+      const form = document.getElementById("checkout-form");
+      const errorEl = document.getElementById("checkout-error");
+      const items = readCart();
+      let coupon = "";
+      try {
+        coupon = sessionStorage.getItem(COUPON_KEY) || "";
+      } catch {
+        // Storage unavailable
+      }
+  
+      const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
+      const total = subtotal + SHIPPING_FEE;
+  
+      document.getElementById("checkout-items").innerHTML = items
+        .map((item) => {
+          const product = PRODUCTS[item.id];
+          return `
+            <li>
+              <img src="${escapeHtml(product.images[0])}" alt="">
+              <div>
+                <span class="checkout-item-name">${escapeHtml(product.name)}</span>
+                <small>Size ${item.size} &middot; Qty ${item.qty}</small>
+              </div>
+              <strong>${formatPrice(product.price * item.qty)}</strong>
+            </li>`;
+        })
+        .join("");
+      document.getElementById("checkout-subtotal").textContent = formatPrice(subtotal);
+      document.getElementById("checkout-shipping").textContent = SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free";
+      document.getElementById("checkout-total").textContent = formatPrice(total);
+      if (coupon) {
+        document.getElementById("checkout-coupon-row").hidden = false;
+        document.getElementById("checkout-coupon").textContent = coupon;
+      }
+  
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        form.classList.add("was-validated");
+        const firstInvalid = form.querySelector(":invalid");
+        if (firstInvalid) {
+          errorEl.textContent = "Please fill in the highlighted fields.";
+          errorEl.hidden = false;
+          firstInvalid.focus();
+          return;
+        }
+        errorEl.hidden = true;
+  
+        const data = Object.fromEntries(new FormData(form));
+        const orderNumber = "DA-" + Date.now().toString().slice(-6);
+        const lines = [
+          `New order ${orderNumber}`,
+          "",
+          ...items.map((item) => {
+            const product = PRODUCTS[item.id];
+            return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(product.price * item.qty)}`;
+          }),
+          "",
+          `Subtotal: ${formatPrice(subtotal)}`,
+          `Shipping: ${SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free"}`,
+          coupon ? `Coupon: ${coupon}` : null,
+          `Total: ${formatPrice(total)}`,
+          `Payment: ${data.payment}`,
+          "",
+          `Name: ${data.name}`,
+          `Phone: ${data.phone}`,
+          data.email ? `Email: ${data.email}` : null,
+          `Address: ${data.address}, ${data.city}${data.postal ? " " + data.postal : ""}`,
+          data.notes ? `Notes: ${data.notes}` : null,
+        ].filter((line) => line !== null);
+        const message = lines.join("\n");
+  
+        document.getElementById("order-number").textContent = orderNumber;
+        document.getElementById("order-phone").textContent = data.phone;
+        document.getElementById("order-email-btn").href =
+          `mailto:${ORDER_EMAIL}?subject=${encodeURIComponent("Order " + orderNumber)}&body=${encodeURIComponent(message)}`;
+        if (ORDER_WHATSAPP) {
+          const whatsappBtn = document.getElementById("order-whatsapp-btn");
+          whatsappBtn.href = `https://wa.me/${ORDER_WHATSAPP}?text=${encodeURIComponent(message)}`;
+          whatsappBtn.hidden = false;
+        }
+  
+        writeCart([]);
+        try {
+          sessionStorage.removeItem(COUPON_KEY);
+        } catch {
+          // Storage unavailable
+        }
+        document.getElementById("checkout-layout").hidden = true;
+        checkoutPage.querySelector("h1").hidden = true;
+        document.getElementById("order-done").hidden = false;
+        window.scrollTo({ top: 0 });
+      });
+    }
   }
 
   // Consultation Modal Events

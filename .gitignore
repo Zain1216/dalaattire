@@ -1,0 +1,12 @@
+# Live database password
+backend/config.php
+
+# Photos uploaded through the admin panel live on the server, not in Git
+uploads/*
+!uploads/.htaccess
+
+# Built by backend/build-upload.php for Hostinger; rebuild instead of committing
+hostinger-upload.zip
+
+# Live Hostinger settings (database password)
+backend/config.hostinger.php

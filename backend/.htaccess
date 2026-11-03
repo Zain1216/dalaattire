@@ -1,0 +1,8 @@
+# Only the public API may be reached from the web; config, setup and SQL files stay private.
+<IfModule mod_authz_core.c>
+  Require all denied
+</IfModule>
+<IfModule !mod_authz_core.c>
+  Order deny,allow
+  Deny from all
+</IfModule>
