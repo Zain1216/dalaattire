@@ -66,6 +66,8 @@ document.addEventListener("DOMContentLoaded", () => {
         isActive = currentFile.includes("services.html");
       } else if (page === "contact") {
         isActive = currentFile.includes("contact.html");
+      } else if (page === "shop") {
+        isActive = ["category.html", "product.html", "cart.html", "checkout.html"].some((f) => currentFile.includes(f));
       }
 
       if (isActive) {
@@ -424,8 +426,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadCatalog().then(() => {
     updateCartBadge();
+    renderHomeCategories();
+    renderServicesSections();
     initShopPages();
   });
+
+  /** Products of one category, in catalog order. */
+  function productsIn(slug) {
+    return Object.entries(PRODUCTS).filter(([, p]) => p.category === slug);
+  }
+
+  // Home page "Our Signature Services": one card per category that has products,
+  // so categories added in the admin appear here too
+  function renderHomeCategories() {
+    const grid = document.querySelector("#services .service-grid");
+    if (!grid) return;
+    const cards = Object.entries(CATEGORIES)
+      .map(([slug, c]) => ({ slug, c, items: productsIn(slug) }))
+      .filter(({ items }) => items.length);
+    if (!cards.length) return;
+    grid.innerHTML = cards
+      .map(({ slug, c, items }) => `
+        <a class="service-card" href="category.html?c=${encodeURIComponent(slug)}">
+          <img src="${escapeHtml(items[0][1].images[0] || c.hero)}" alt="${escapeHtml(c.name)}" loading="lazy">
+          <div><span>${escapeHtml(c.name)}</span></div>
+        </a>`)
+      .join("");
+    observeReveal([...grid.children]);
+  }
+
+  // Services page "What We Offer": one slider per category that has products
+  function renderServicesSections() {
+    const section = document.getElementById("what-we-offer");
+    if (!section) return;
+    const blocks = Object.entries(CATEGORIES)
+      .map(([slug, c]) => ({ slug, c, items: productsIn(slug).slice(0, 8) }))
+      .filter(({ items }) => items.length);
+    if (!blocks.length) return;
+    section.querySelectorAll(".offer-category").forEach((el) => el.remove());
+    blocks.forEach(({ slug, c, items }) => {
+      const block = document.createElement("div");
+      block.className = "offer-category";
+      block.innerHTML = `
+        <h3 class="category-pill"><a href="category.html?c=${encodeURIComponent(slug)}">${escapeHtml(c.name)}</a></h3>
+        <div class="carousel" data-carousel>
+          <div class="carousel-track">
+            ${items.map(([id, p]) => `<a class="offer-card" href="product.html?id=${encodeURIComponent(id)}"><img src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.name)}" loading="lazy"></a>`).join("")}
+          </div>
+          <div class="carousel-dots" aria-label="${escapeHtml(c.name)} slides"></div>
+        </div>`;
+      section.appendChild(block);
+      setupCarousel(block.querySelector("[data-carousel]"));
+    });
+    observeReveal([...section.querySelectorAll(".offer-category")]);
+  }
 
   function initShopPages() {
     // Product Page
@@ -888,8 +942,11 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast(`Thank you, ${name}. Our team will be in touch shortly.`);
   });
 
-  // Services Page Carousels: one dot per page of visible cards
-  document.querySelectorAll("[data-carousel]").forEach((carousel) => {
+  // Services Page Carousels: one dot per page of visible cards.
+  // Also used for the category sections the catalog builds later (see renderServicesSections).
+  document.querySelectorAll("[data-carousel]").forEach(setupCarousel);
+
+  function setupCarousel(carousel) {
     const track = carousel.querySelector(".carousel-track");
     const dotsWrap = carousel.querySelector(".carousel-dots");
     if (!track || !dotsWrap) return;
@@ -928,18 +985,17 @@ document.addEventListener("DOMContentLoaded", () => {
     track.addEventListener("scroll", updateDots, { passive: true });
     window.addEventListener("resize", renderDots);
     renderDots();
-  });
+  }
 
-  // Service Card Click Action
-  const serviceCards = document.querySelectorAll(".service-card");
-  serviceCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      const title = (card.querySelector("span")?.textContent || "").trim();
-      const match = Object.entries(CATEGORIES).find(([, c]) => c.name.toLowerCase() === title.toLowerCase());
-      if (match) location.href = `category.html?c=${match[0]}`;
-      else openModal(title || "Bespoke Garment");
+  /** Let elements added after page load take part in the scroll reveal animation. */
+  function observeReveal(elements) {
+    elements.forEach((el, idx) => {
+      el.classList.add("reveal");
+      el.style.transitionDelay = `${(idx % 6) * 0.1}s`;
+      if (window.__siteScrollObserver) window.__siteScrollObserver.observe(el);
+      else el.classList.add("revealed");
     });
-  });
+  }
 
   // ==========================================================================
   // Luxury Scroll Reveal & Automatic Grid Staggering

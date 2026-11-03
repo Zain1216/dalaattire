@@ -659,6 +659,12 @@ h1, h2, h3, h4, h5, h6 {
   gap: 18px;
 }
 
+/* Cards are links to their category page (built from the catalog by script.js) */
+a.service-card {
+  display: block;
+  color: inherit;
+}
+
 .service-card {
   position: relative;
   min-height: 410px;
