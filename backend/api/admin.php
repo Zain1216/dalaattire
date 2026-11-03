@@ -22,9 +22,26 @@ header('X-Content-Type-Options: nosniff');
 // ---------------------------------------------------------------------------
 // CORS: answer only our own sites
 // ---------------------------------------------------------------------------
+/** "https://zain1216.github.io/dalaattire" -> "https://zain1216.github.io" */
+function origin_of(string $url): string
+{
+    $p = parse_url($url);
+    if (empty($p['scheme']) || empty($p['host'])) {
+        return '';
+    }
+    return strtolower($p['scheme'] . '://' . $p['host']) . (isset($p['port']) ? ':' . $p['port'] : '');
+}
+
+// Allowed: the configured list, plus the storefront (site_url) and this backend (backend_url),
+// so an older config.php without 'allowed_origins' still works for the GitHub admin.
+$allowedOrigins = array_filter(array_merge(
+    config()['allowed_origins'] ?? [],
+    [origin_of((string) (config()['site_url'] ?? '')), origin_of((string) (config()['backend_url'] ?? ''))]
+));
+
 $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
 if ($origin !== '') {
-    $allowed = in_array($origin, config()['allowed_origins'] ?? [], true)
+    $allowed = in_array(strtolower(rtrim($origin, '/')), array_map(static fn ($o) => strtolower(rtrim($o, '/')), $allowedOrigins), true)
         || preg_match('#^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$#', $origin);
     if (!$allowed) {
         http_response_code(403);
