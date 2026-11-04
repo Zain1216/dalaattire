@@ -54,6 +54,21 @@
     return "Rs. " + Number(n).toLocaleString("en-US");
   }
 
+  /** ISO UTC time -> value for <input type="datetime-local"> in the admin's own time zone. */
+  function toLocalInput(iso) {
+    if (!iso) return "";
+    const d = new Date(iso);
+    const pad = (n) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  /** Price cell for the products list. */
+  function priceCell(p) {
+    if (p.price_on_request) return '<span class="muted">On request</span>' + (p.offer_active ? ' <span class="pill pill-on">Offer</span>' : "");
+    if (p.offer_active && p.offer_price) return `<s class="muted">${formatPrice(p.price)}</s> ${formatPrice(p.offer_price)} <span class="pill pill-on">Offer</span>`;
+    return formatPrice(p.price) + (p.offer_active ? ' <span class="pill pill-on">Timer</span>' : "");
+  }
+
   /** Call the admin API. GET when no body is given, POST (FormData) otherwise. */
   async function api(action, { query = {}, body } = {}) {
     const url = new URL(API_URL, location.href);
@@ -173,7 +188,7 @@
                 <td>${p.cover ? `<img src="${esc(p.cover)}" alt="" class="thumb" loading="lazy">` : '<span class="no-photo">No photo</span>'}</td>
                 <td><a href="#/product/${p.id}" class="strong">${esc(p.name)}</a></td>
                 <td>${esc(p.category)}</td>
-                <td>${formatPrice(p.price)}</td>
+                <td>${priceCell(p)}</td>
                 <td>${esc(p.color)}</td>
                 <td>${esc(p.availability)}</td>
                 <td><button type="button" class="pill ${p.is_active ? "pill-on" : "pill-off"}" data-toggle="${p.id}">${p.is_active ? "Visible" : "Hidden"}</button></td>
@@ -216,7 +231,8 @@
       api("categories"),
       isNew ? Promise.resolve({ product: null, colors: [] }) : api("product", { query: { id } }),
     ]);
-    const p = detail.product || { name: "", slug: "", category_id: categories[0]?.id, description: "", price: "", color: "", availability: "In Stock", is_active: true, sort_order: 0, images: [] };
+    const p = detail.product || { name: "", slug: "", category_id: categories[0]?.id, description: "", price: "", color: "", availability: "In Stock", is_active: true, sort_order: 0, images: [], price_on_request: false, offer_price: null, offer_ends_at: null };
+    const offerEnded = p.offer_ends_at && new Date(p.offer_ends_at) <= new Date();
 
     view.innerHTML = `
       <div class="page-head">
@@ -236,8 +252,20 @@
                 ${categories.map((c) => `<option value="${c.id}" ${c.id === p.category_id ? "selected" : ""}>${esc(c.name)}</option>`).join("")}
               </select>
             </label>
-            <label>Price (Rs.)*<input name="price" value="${esc(p.price)}" inputmode="numeric" pattern="[0-9]+" required></label>
+            <label>Price (Rs.)<span class="price-required">*</span><input name="price" value="${p.price_on_request && !p.price ? "" : esc(p.price)}" inputmode="numeric" pattern="[0-9]+" ${p.price_on_request ? "" : "required"}></label>
           </div>
+          <label class="check"><input type="checkbox" name="price_on_request" value="1" ${p.price_on_request ? "checked" : ""}> Price on request &mdash; hide the price and show a &ldquo;Contact on WhatsApp&rdquo; button instead of Add to Cart</label>
+
+          <fieldset class="offer-box">
+            <legend>Limited Time Offer <span class="muted">(optional)</span></legend>
+            ${offerEnded ? '<p class="flash flash-error">This offer has ended and is no longer shown on the site. Set a new end time or clear it.</p>' : ""}
+            <div class="row">
+              <label>Offer price (Rs.)<input name="offer_price" value="${p.offer_price ?? ""}" inputmode="numeric" pattern="[0-9]+" placeholder="e.g. 9999"></label>
+              <label>Offer ends<input type="datetime-local" name="offer_ends_local" value="${toLocalInput(p.offer_ends_at)}"></label>
+            </div>
+            <p class="hint">Set an end time to show a countdown timer on the product. When it ends, the regular price comes back by itself. Leave the offer price empty to show only the countdown.</p>
+            <button type="button" class="link" id="clear-offer">Clear offer</button>
+          </fieldset>
           <div class="row">
             <label>Colour<input name="color" value="${esc(p.color)}" maxlength="40" placeholder="e.g. Green" list="colour-list"></label>
             <label>Availability*
@@ -275,12 +303,32 @@
       </div>`;
 
     const form = document.getElementById("product-form");
+    // Price becomes optional when the product is "price on request"
+    form.price_on_request.addEventListener("change", () => {
+      form.price.required = !form.price_on_request.checked;
+      form.querySelector(".price-required").hidden = form.price_on_request.checked;
+    });
+    form.querySelector(".price-required").hidden = form.price_on_request.checked;
+    document.getElementById("clear-offer").addEventListener("click", () => {
+      form.offer_price.value = "";
+      form.offer_ends_local.value = "";
+    });
+
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       busy(form, async () => {
         const big = tooBig(form.querySelector('[type="file"]').files);
         if (big) throw new Error(`${big.name} is larger than ${MAX_UPLOAD_MB} MB.`);
-        const fd = formData(form, { id: isNew ? "0" : String(p.id), is_active: form.is_active.checked ? "1" : "0" });
+        const endsLocal = form.offer_ends_local.value;
+        if (endsLocal && new Date(endsLocal) <= new Date()) throw new Error("Offer end time must be in the future.");
+        const fd = formData(form, {
+          id: isNew ? "0" : String(p.id),
+          is_active: form.is_active.checked ? "1" : "0",
+          price_on_request: form.price_on_request.checked ? "1" : "0",
+          // The browser's local time (e.g. Pakistan) is sent to the server as UTC
+          offer_ends_at: endsLocal ? new Date(endsLocal).toISOString() : "",
+        });
+        fd.delete("offer_ends_local");
         const res = await api("product_save", { body: fd });
         clearFlash();
         flash(res.message);

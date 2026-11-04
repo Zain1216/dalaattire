@@ -160,6 +160,10 @@ function product_row(array $p): array
         'category'     => $p['category'] ?? '',
         'description'  => $p['description'] ?? '',
         'price'        => (int) $p['price'],
+        'price_on_request' => (bool) $p['price_on_request'],
+        'offer_price'  => $p['offer_price'] !== null ? (int) $p['offer_price'] : null,
+        'offer_ends_at' => utc_iso($p['offer_ends_at']),
+        'offer_active' => active_offer($p) !== null,
         'color'        => $p['color'],
         'availability' => $p['availability'],
         'is_active'    => (bool) $p['is_active'],
@@ -176,6 +180,7 @@ $action = (string) ($_GET['action'] ?? '');
 
 try {
     ensure_auth_tables();
+    ensure_product_columns();
     $pdo = db();
 
     switch ($action) {
@@ -336,8 +341,27 @@ try {
             if (!(int) $cat->fetchColumn()) {
                 $errors[] = 'Choose a category.';
             }
-            if (!ctype_digit($price) || (int) $price <= 0) {
-                $errors[] = 'Price must be a whole number of rupees, e.g. 12999.';
+            $onRequest = input('price_on_request', '0') === '1';
+            if ($onRequest && $price === '') {
+                $price = '0'; // no price shown; customers ask on WhatsApp
+            } elseif (!ctype_digit($price) || (int) $price <= 0) {
+                $errors[] = 'Price must be a whole number of rupees, e.g. 12999 (or tick "Price on request").';
+            }
+
+            // Limited-time offer: optional sale price and/or end time (sent by the admin app in UTC)
+            $offerPrice = input('offer_price');
+            if ($offerPrice !== '' && (!ctype_digit($offerPrice) || (int) $offerPrice <= 0)) {
+                $errors[] = 'Offer price must be a whole number of rupees, e.g. 9999.';
+            } elseif ($offerPrice !== '' && !$onRequest && ctype_digit($price) && (int) $offerPrice >= (int) $price) {
+                $errors[] = 'Offer price must be lower than the regular price.';
+            }
+            $offerEnds = null;
+            if (input('offer_ends_at') !== '') {
+                try {
+                    $offerEnds = (new DateTimeImmutable(input('offer_ends_at')))->setTimezone(new DateTimeZone('UTC'))->format('Y-m-d H:i:s');
+                } catch (Exception $e) {
+                    $errors[] = 'Offer end time is not a valid date.';
+                }
             }
             if (!in_array($availability, ['In Stock', 'Made to Order'], true)) {
                 $errors[] = 'Choose an availability.';
@@ -367,13 +391,16 @@ try {
                 $pdo->beginTransaction();
                 $slug = unique_slug('products', slugify(input('slug') ?: $name), $id);
                 $values = [$slug, $categoryId, $name, input('description'), (int) $price, input('color'),
-                           $availability, input('is_active', '0') === '1' ? 1 : 0, (int) input('sort_order', '0')];
+                           $availability, input('is_active', '0') === '1' ? 1 : 0, (int) input('sort_order', '0'),
+                           $onRequest ? 1 : 0, $offerPrice !== '' ? (int) $offerPrice : null, $offerEnds];
                 if ($id) {
                     $pdo->prepare('UPDATE products SET slug = ?, category_id = ?, name = ?, description = ?, price = ?, color = ?,
-                                   availability = ?, is_active = ?, sort_order = ? WHERE id = ?')->execute(array_merge($values, [$id]));
+                                   availability = ?, is_active = ?, sort_order = ?, price_on_request = ?, offer_price = ?, offer_ends_at = ?
+                                   WHERE id = ?')->execute(array_merge($values, [$id]));
                 } else {
-                    $pdo->prepare('INSERT INTO products (slug, category_id, name, description, price, color, availability, is_active, sort_order)
-                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute($values);
+                    $pdo->prepare('INSERT INTO products (slug, category_id, name, description, price, color, availability, is_active, sort_order,
+                                   price_on_request, offer_price, offer_ends_at)
+                                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')->execute($values);
                     $id = (int) $pdo->lastInsertId();
                 }
                 $next = $pdo->prepare('SELECT COALESCE(MAX(sort_order), 0) FROM product_images WHERE product_id = ?');

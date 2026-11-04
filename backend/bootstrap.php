@@ -43,6 +43,60 @@ function db(bool $withDb = true): PDO
 }
 
 /**
+ * Add product columns introduced after the first release (price on request, limited-time offer),
+ * so a database imported earlier keeps working without a manual step. Runs once per request.
+ */
+function ensure_product_columns(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    $have = db()->query(
+        "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'products'"
+    )->fetchAll(PDO::FETCH_COLUMN);
+    $add = [
+        'price_on_request' => 'ADD COLUMN price_on_request TINYINT(1) NOT NULL DEFAULT 0',
+        'offer_price'      => 'ADD COLUMN offer_price INT UNSIGNED NULL',
+        'offer_ends_at'    => 'ADD COLUMN offer_ends_at DATETIME NULL',
+    ];
+    $missing = array_diff_key($add, array_flip($have));
+    if ($missing) {
+        db()->exec('ALTER TABLE products ' . implode(', ', $missing));
+    }
+}
+
+/** UTC "Y-m-d H:i:s" from the database -> ISO 8601 for JavaScript ("2026-11-10T19:00:00Z"). */
+function utc_iso(?string $datetime): ?string
+{
+    return $datetime ? str_replace(' ', 'T', $datetime) . 'Z' : null;
+}
+
+/**
+ * The product's offer as the storefront should see it, or null when there is none / it has ended.
+ * An offer can be a sale price, a deadline (countdown), or both.
+ */
+function active_offer(array $p): ?array
+{
+    $price = $p['offer_price'] !== null ? (int) $p['offer_price'] : null;
+    $ends = $p['offer_ends_at'] ?: null;
+    if ($price === null && $ends === null) {
+        return null;
+    }
+    if ($ends !== null && $ends <= gmdate('Y-m-d H:i:s')) {
+        return null;
+    }
+    if ($price !== null && !$p['price_on_request'] && $price >= (int) $p['price']) {
+        $price = null; // not a discount; keep only the countdown
+    }
+    if ($price === null && $ends === null) {
+        return null;
+    }
+    return ['price' => $p['price_on_request'] ? null : $price, 'endsAt' => utc_iso($ends)];
+}
+
+/**
  * Public URL of the backend folder (the folder holding backend/, admin/ and uploads/), no trailing slash.
  * Uses the backend_url setting when given, otherwise works it out from the current request.
  */

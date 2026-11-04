@@ -343,11 +343,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const CART_KEY = "daula-cart";
   const COUPON_KEY = "daula-coupon";
 
+  // WhatsApp number customers message: "price on request" products and checkout orders.
+  // International format without + or spaces (+92 022 305070 -> "92022305070"); empty hides the buttons.
+  const WHATSAPP_NUMBER = "92022305070";
+
   // Checkout settings: delivery charge and where customers send their order.
-  // ORDER_WHATSAPP: international format without + or spaces (e.g. "923001234567"); empty hides the button.
   const SHIPPING_FEE = 0;
   const ORDER_EMAIL = "info@daulattire.com";
-  const ORDER_WHATSAPP = "";
+  const ORDER_WHATSAPP = WHATSAPP_NUMBER;
 
   function escapeHtml(value) {
     return String(value).replace(/[&<>"']/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
@@ -357,10 +360,47 @@ document.addEventListener("DOMContentLoaded", () => {
     return "Rs. " + amount.toLocaleString("en-US");
   }
 
+  // ------------------------------------------------------------------------
+  // Pricing: "price on request" products and limited-time offers (set in the admin)
+  // product.offer = { price: sale price or null, endsAt: ISO time or null }
+  // ------------------------------------------------------------------------
+  function isOnRequest(p) {
+    return Boolean(p.priceOnRequest);
+  }
+
+  /** Is the product's offer still running right now? (offers can end while the page is open) */
+  function offerRunning(p) {
+    return Boolean(p.offer) && (!p.offer.endsAt || new Date(p.offer.endsAt) > new Date());
+  }
+
+  /** What one unit costs today: the offer price while it runs, otherwise the regular price. */
+  function unitPrice(p) {
+    return offerRunning(p) && p.offer.price ? p.offer.price : p.price;
+  }
+
+  /** Price line for product cards in grids. */
+  function cardPriceHtml(p) {
+    if (isOnRequest(p)) return '<p class="price-on-request">Price on request</p>';
+    if (offerRunning(p) && p.offer.price) {
+      return `<p><s class="price-was">${formatPrice(p.price)}</s> <span class="price-sale">${formatPrice(p.offer.price)}.00 PKR</span></p>`;
+    }
+    return `<p>${formatPrice(p.price)}.00 PKR</p>`;
+  }
+
+  /** "Limited Time Offer" ribbon for product cards. */
+  function cardBadgeHtml(p) {
+    return offerRunning(p) ? '<span class="offer-badge">Limited Time Offer</span>' : "";
+  }
+
+  function whatsappLink(message) {
+    return WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}` : "";
+  }
+
   function readCart() {
     try {
       const items = JSON.parse(localStorage.getItem(CART_KEY)) || [];
-      return items.filter((item) => PRODUCTS[item.id] && item.qty > 0);
+      // "Price on request" products are ordered on WhatsApp, never through the cart
+      return items.filter((item) => PRODUCTS[item.id] && !isOnRequest(PRODUCTS[item.id]) && item.qty > 0);
     } catch {
       return [];
     }
@@ -502,7 +542,72 @@ document.addEventListener("DOMContentLoaded", () => {
         categoryLink.href = `category.html?c=${product.category}`;
       }
       document.getElementById("product-desc").textContent = product.description;
-      document.getElementById("product-price").textContent = formatPrice(product.price);
+      const priceEl = document.getElementById("product-price");
+
+      function renderPrice() {
+        if (isOnRequest(product)) {
+          priceEl.innerHTML = '<span class="price-on-request">Price on request</span>';
+        } else if (offerRunning(product) && product.offer.price) {
+          priceEl.innerHTML = `<s class="price-was">${formatPrice(product.price)}</s> <span class="price-sale">${formatPrice(product.offer.price)}</span>`;
+        } else {
+          priceEl.textContent = formatPrice(product.price);
+        }
+      }
+      renderPrice();
+
+      // Countdown for a limited-time offer with an end time; when it ends the regular price returns
+      const offerTimer = document.createElement("div");
+      offerTimer.className = "offer-timer";
+      offerTimer.setAttribute("role", "timer");
+      offerTimer.hidden = true;
+      priceEl.after(offerTimer);
+      if (offerRunning(product) && product.offer.endsAt) {
+        const ends = new Date(product.offer.endsAt);
+        const pad = (n) => String(n).padStart(2, "0");
+        const unit = (value, label) => `<span class="timer-unit"><strong>${value}</strong><small>${label}</small></span>`;
+        const tick = () => {
+          const left = ends - new Date();
+          if (left <= 0) {
+            clearInterval(timerId);
+            offerTimer.hidden = true;
+            renderPrice();
+            return;
+          }
+          const s = Math.floor(left / 1000);
+          offerTimer.innerHTML = `
+            <p class="timer-title">Limited Time Offer &middot; Ends in</p>
+            <div class="timer-units">
+              ${unit(Math.floor(s / 86400), "Days")}${unit(pad(Math.floor((s % 86400) / 3600)), "Hours")}${unit(pad(Math.floor((s % 3600) / 60)), "Mins")}${unit(pad(s % 60), "Secs")}
+            </div>`;
+          offerTimer.hidden = false;
+        };
+        const timerId = setInterval(tick, 1000);
+        tick();
+      } else if (offerRunning(product)) {
+        offerTimer.innerHTML = '<p class="timer-title">Limited Time Offer</p>';
+        offerTimer.hidden = false;
+      }
+
+      // Price on request: no cart, customers ask on WhatsApp instead
+      if (isOnRequest(product)) {
+        productView.querySelector(".qty-label")?.setAttribute("hidden", "");
+        productView.querySelector(".qty-stepper")?.setAttribute("hidden", "");
+        const addBtn = document.getElementById("add-to-cart-btn");
+        const wa = document.createElement("a");
+        wa.className = "btn-whatsapp";
+        wa.id = "whatsapp-btn";
+        wa.target = "_blank";
+        wa.rel = "noopener noreferrer";
+        wa.innerHTML = `<svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.8-.9-2-1-.3-.1-.5-.1-.7.1-.2.3-.8 1-.9 1.2-.2.2-.3.2-.6.1-.3-.1-1.3-.5-2.4-1.5-.9-.8-1.5-1.8-1.7-2.1-.2-.3 0-.5.1-.6l.4-.5c.2-.2.2-.3.3-.5.1-.2 0-.4 0-.5l-.9-2.2c-.2-.6-.5-.5-.7-.5h-.6c-.2 0-.5.1-.8.4-.3.3-1 1-1 2.5s1.1 2.9 1.2 3.1c.1.2 2.1 3.2 5.1 4.5.7.3 1.3.5 1.7.6.7.2 1.4.2 1.9.1.6-.1 1.8-.7 2-1.4.2-.7.2-1.3.2-1.4-.1-.1-.3-.2-.6-.3zM12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2z"/></svg><span>Contact on WhatsApp</span>`;
+        const updateLink = () => {
+          wa.href = whatsappLink(`Assalam o Alaikum! I'm interested in "${product.name}" (size ${size}). Please share the price.\n${location.href}`);
+        };
+        updateLink();
+        productView.querySelectorAll(".size-options button").forEach((b) => b.addEventListener("click", () => setTimeout(updateLink)));
+        if (WHATSAPP_NUMBER) addBtn?.replaceWith(wa);
+        else addBtn?.setAttribute("hidden", "");
+      }
+
       mainImg.src = product.images[0];
       mainImg.alt = product.name;
   
@@ -573,9 +678,10 @@ document.addEventListener("DOMContentLoaded", () => {
           card.className = "related-card reveal revealed";
           card.href = `product.html?id=${id}`;
           card.innerHTML = `
+            ${cardBadgeHtml(item)}
             <img src="${escapeHtml(item.images[0])}" alt="${escapeHtml(item.name)}" loading="lazy">
             <h3>${escapeHtml(item.name)}</h3>
-            <p>${formatPrice(item.price)}.00 PKR</p>`;
+            ${cardPriceHtml(item)}`;
           related?.appendChild(card);
         });
     }
@@ -614,7 +720,11 @@ document.addEventListener("DOMContentLoaded", () => {
           ? []
           : Object.entries(CATEGORIES).map(([key, c]) => ({ value: key, label: c.name, test: (p) => p.category === key })),
         availability: [...new Set(all.map(([, p]) => p.availability))].map((v) => ({ value: v, label: v, test: (p) => p.availability === v })),
-        price: PRICE_RANGES.map((r) => ({ value: r.label, label: r.label, test: (p) => p.price >= r.min && p.price <= r.max })),
+        // Offers count at their sale price; "price on request" products get their own option
+        price: [
+          ...PRICE_RANGES.map((r) => ({ value: r.label, label: r.label, test: (p) => !isOnRequest(p) && unitPrice(p) >= r.min && unitPrice(p) <= r.max })),
+          { value: "on-request", label: "Price on request", test: (p) => isOnRequest(p) },
+        ],
         color: [...new Set(all.map(([, p]) => p.color))].sort().map((v) => ({ value: v, label: v, test: (p) => p.color === v })),
       };
       document.querySelector('[data-filter="category"]').hidden = Boolean(categoryKey);
@@ -653,9 +763,10 @@ document.addEventListener("DOMContentLoaded", () => {
             .map(
               ([id, p], idx) => `
               <a class="related-card reveal" href="product.html?id=${id}" style="transition-delay: ${(idx % 6) * 0.08}s;">
+                ${cardBadgeHtml(p)}
                 <img src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.name)}" loading="lazy">
                 <h3>${escapeHtml(p.name)}</h3>
-                <p>${formatPrice(p.price)}.00 PKR</p>
+                ${cardPriceHtml(p)}
               </a>`
             )
             .join("");
@@ -704,7 +815,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
       function renderCart() {
         const items = readCart();
-        const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
+        const subtotal = items.reduce((sum, item) => sum + unitPrice(PRODUCTS[item.id]) * item.qty, 0);
         list.innerHTML = "";
         empty.hidden = items.length > 0;
   
@@ -721,13 +832,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 <button type="button" class="cart-remove" data-remove="${index}">Remove</button>
               </div>
             </div>
-            <span class="cart-price"><small>Price</small>${formatPrice(product.price)}</span>
+            <span class="cart-price"><small>Price</small>${offerRunning(product) && product.offer.price ? `<s class="price-was">${formatPrice(product.price)}</s> ` : ""}${formatPrice(unitPrice(product))}</span>
             <div class="qty-stepper">
               <button type="button" data-step="-1" data-index="${index}" aria-label="Decrease quantity">&minus;</button>
               <span>${item.qty}</span>
               <button type="button" data-step="1" data-index="${index}" aria-label="Increase quantity">+</button>
             </div>
-            <span class="cart-line-total"><small>Total</small>${formatPrice(product.price * item.qty)}</span>`;
+            <span class="cart-line-total"><small>Total</small>${formatPrice(unitPrice(product) * item.qty)}</span>`;
           list.appendChild(row);
         });
   
@@ -789,7 +900,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Storage unavailable
       }
   
-      const subtotal = items.reduce((sum, item) => sum + PRODUCTS[item.id].price * item.qty, 0);
+      const subtotal = items.reduce((sum, item) => sum + unitPrice(PRODUCTS[item.id]) * item.qty, 0);
       const total = subtotal + SHIPPING_FEE;
   
       document.getElementById("checkout-items").innerHTML = items
@@ -802,7 +913,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="checkout-item-name">${escapeHtml(product.name)}</span>
                 <small>Size ${item.size} &middot; Qty ${item.qty}</small>
               </div>
-              <strong>${formatPrice(product.price * item.qty)}</strong>
+              <strong>${formatPrice(unitPrice(product) * item.qty)}</strong>
             </li>`;
         })
         .join("");
@@ -833,7 +944,7 @@ document.addEventListener("DOMContentLoaded", () => {
           "",
           ...items.map((item) => {
             const product = PRODUCTS[item.id];
-            return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(product.price * item.qty)}`;
+            return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(unitPrice(product) * item.qty)}`;
           }),
           "",
           `Subtotal: ${formatPrice(subtotal)}`,

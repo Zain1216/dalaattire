@@ -21,6 +21,9 @@ CREATE TABLE IF NOT EXISTS products (
   price         INT UNSIGNED NOT NULL,
   color         VARCHAR(40)  NOT NULL DEFAULT '',
   availability  ENUM('In Stock', 'Made to Order') NOT NULL DEFAULT 'In Stock',
+  price_on_request TINYINT(1) NOT NULL DEFAULT 0,  -- hide price, customers ask on WhatsApp
+  offer_price   INT UNSIGNED NULL,                 -- limited-time sale price (optional)
+  offer_ends_at DATETIME     NULL,                 -- when the offer ends, in UTC (optional; drives the countdown)
   is_active     TINYINT(1)   NOT NULL DEFAULT 1,
   sort_order    INT          NOT NULL DEFAULT 0,
   created_at    TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,

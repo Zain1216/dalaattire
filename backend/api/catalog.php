@@ -2,6 +2,8 @@
 // GET backend/api/catalog.php
 // Returns every category and active product, in the same shape script.js uses.
 // Uploaded photos come back as full backend URLs; the site's own assets/... paths stay relative.
+// price is null when priceOnRequest is true (ask on WhatsApp). offer is null, or
+// { price: sale price or null, endsAt: ISO UTC time or null } while a limited-time offer runs.
 // { "categories": { slug: { name, hero } }, "products": { slug: { name, price, color, category, availability, images, description } } }
 
 declare(strict_types=1);
@@ -18,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
 }
 
 try {
+    ensure_product_columns();
     $categories = [];
     foreach (db()->query('SELECT slug, name, hero_image FROM categories ORDER BY sort_order, name') as $row) {
         $categories[$row['slug']] = ['name' => $row['name'], 'hero' => public_image_url($row['hero_image'])];
@@ -30,7 +33,8 @@ try {
 
     $products = [];
     $rows = db()->query(
-        'SELECT p.id, p.slug, p.name, p.description, p.price, p.color, p.availability, c.slug AS category
+        'SELECT p.id, p.slug, p.name, p.description, p.price, p.color, p.availability,
+                p.price_on_request, p.offer_price, p.offer_ends_at, c.slug AS category
          FROM products p JOIN categories c ON c.id = p.category_id
          WHERE p.is_active = 1
          ORDER BY c.sort_order, p.sort_order, p.name'
@@ -41,8 +45,10 @@ try {
             continue;
         }
         $products[$row['slug']] = [
-            'name'         => $row['name'],
-            'price'        => (int) $row['price'],
+            'name'           => $row['name'],
+            'price'          => $row['price_on_request'] ? null : (int) $row['price'],
+            'priceOnRequest' => (bool) $row['price_on_request'],
+            'offer'          => active_offer($row),
             'color'        => $row['color'],
             'category'     => $row['category'],
             'availability' => $row['availability'],

@@ -3058,6 +3058,131 @@ footer {
   color: var(--primary);
 }
 
+/* Limited-time offers & "price on request" (set per product in the admin) */
+.related-card {
+  position: relative;
+}
+
+.offer-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: #b38f50;
+  color: #15100d;
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.45);
+}
+
+.price-was {
+  color: var(--text-muted);
+  text-decoration-thickness: 1px;
+  margin-right: 6px;
+}
+
+.price-sale {
+  color: var(--primary);
+}
+
+.price-on-request {
+  color: var(--primary);
+  letter-spacing: 0.06em;
+}
+
+.product-price .price-was {
+  font-size: 1.4rem;
+}
+
+.product-price .price-on-request {
+  font-size: 1.7rem;
+}
+
+.offer-timer {
+  margin: -22px 0 34px;
+  max-width: 340px;
+  padding: 14px 16px 16px;
+  border: 1px solid rgba(200, 162, 101, 0.45);
+  background: rgba(179, 143, 80, 0.08);
+}
+
+.timer-title {
+  margin-bottom: 10px;
+  color: var(--primary);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.offer-timer > .timer-title:only-child {
+  margin-bottom: 0;
+}
+
+.timer-units {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.timer-unit {
+  display: grid;
+  gap: 2px;
+  padding: 8px 4px;
+  background: #15100d;
+  border: 1px solid var(--border);
+}
+
+.timer-unit strong {
+  font-family: var(--font-serif);
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1;
+  color: #ffffff;
+  font-variant-numeric: tabular-nums;
+}
+
+.timer-unit small {
+  color: var(--text-muted);
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-width: 240px;
+  height: 46px;
+  padding: 0 22px;
+  background: #25d366;
+  color: #0b2416;
+  font-weight: 700;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: var(--transition);
+}
+
+.btn-whatsapp:hover {
+  background: #2ee874;
+  color: #0b2416;
+  transform: translateY(-2px);
+}
+
+.cart-price .price-was {
+  display: block;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
 /* Category Page */
 .category-hero {
   min-height: 672px;

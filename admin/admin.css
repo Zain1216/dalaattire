@@ -97,3 +97,9 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--g
 .loading { padding: 40px 0; text-align: center; }
 button:disabled { opacity: 0.6; cursor: wait; }
 .cat-hero:not([src]), .cat-hero[src=""] { background: var(--input); }
+
+.offer-box { border: 1px solid var(--border); border-radius: 6px; padding: 14px 16px 16px; display: grid; gap: 12px; }
+.offer-box legend { padding: 0 6px; color: var(--gold); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+.offer-box .hint { margin-top: 0; }
+.offer-box #clear-offer { justify-self: start; }
+.data-table s { margin-right: 4px; }
