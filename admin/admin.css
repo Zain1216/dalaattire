@@ -109,3 +109,31 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .password-wrap input { padding-right: 46px; }
 .password-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; border-radius: 4px; color: var(--muted); }
 .password-toggle:hover, .password-toggle:focus-visible { color: var(--gold); outline: none; background: rgba(200, 162, 101, 0.1); }
+
+/* Inbox */
+.nav-badge { display: inline-grid; place-items: center; min-width: 18px; height: 18px; padding: 0 5px; margin-left: 4px; border-radius: 999px; background: #c0392b; color: #fff; font-size: 0.65rem; font-weight: 700; letter-spacing: 0; vertical-align: 1px; }
+.inbox-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+.inbox-tabs a { display: inline-flex; align-items: center; gap: 6px; padding: 10px 14px; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.inbox-tabs a.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-count { color: var(--muted); font-size: 0.75rem; }
+.inbox-list { display: grid; gap: 14px; }
+.inbox-card { display: grid; gap: 12px; border-left: 3px solid var(--border); }
+.inbox-card.status-new { border-left-color: #c0392b; }
+.inbox-card.status-in_progress { border-left-color: var(--gold); }
+.inbox-card.status-done { opacity: 0.75; }
+.inbox-head { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: start; }
+.inbox-head h2 { margin-bottom: 2px; }
+.inbox-actions { display: flex; gap: 14px; align-items: center; }
+.inbox-actions select { width: auto; }
+.inbox-contact { font-size: 0.88rem; line-height: 1.8; }
+.inbox-body { display: grid; gap: 10px; }
+.inbox-field span { display: block; color: var(--muted); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; }
+.inbox-field p { white-space: pre-wrap; }
+.inbox-items { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.inbox-items th, .inbox-items td { padding: 7px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+.inbox-items th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.inbox-items tfoot td { border-bottom: none; }
+.inbox-items tfoot td:first-child { text-align: right; color: var(--muted); }
+.inbox-items .strong-row td { font-weight: 600; color: var(--gold); }
+.gold { color: var(--gold); }
+.pager { display: flex; justify-content: space-between; align-items: center; margin-top: 18px; }

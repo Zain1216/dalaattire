@@ -42,6 +42,89 @@ function db(bool $withDb = true): PDO
     return $conn;
 }
 
+/** "https://zain1216.github.io/dalaattire" -> "https://zain1216.github.io" */
+function origin_of(string $url): string
+{
+    $p = parse_url($url);
+    if (empty($p['scheme']) || empty($p['host'])) {
+        return '';
+    }
+    return strtolower($p['scheme'] . '://' . $p['host']) . (isset($p['port']) ? ':' . $p['port'] : '');
+}
+
+/**
+ * CORS for APIs that only our own websites may call from a browser: the configured
+ * allowed_origins, the storefront (site_url), this backend (backend_url) and localhost.
+ * Other websites get 403; OPTIONS preflight requests are answered here.
+ */
+function allow_our_origins_only(string $what): void
+{
+    $allowedOrigins = array_map(static fn ($o) => strtolower(rtrim($o, '/')), array_filter(array_merge(
+        config()['allowed_origins'] ?? [],
+        [origin_of((string) (config()['site_url'] ?? '')), origin_of((string) (config()['backend_url'] ?? ''))]
+    )));
+
+    $origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
+    if ($origin !== '') {
+        $allowed = in_array(strtolower(rtrim($origin, '/')), $allowedOrigins, true)
+            || preg_match('#^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$#', $origin);
+        if (!$allowed) {
+            http_response_code(403);
+            exit(json_encode(['error' => "This website may not use the {$what}."]));
+        }
+        header('Access-Control-Allow-Origin: ' . $origin);
+        header('Vary: Origin');
+        header('Access-Control-Allow-Headers: Authorization, Content-Type');
+        header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
+        header('Access-Control-Max-Age: 600');
+    }
+    if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+        http_response_code(204);
+        exit;
+    }
+}
+
+/**
+ * The visitor's IP address, for rate limits. Behind Hostinger's CDN every request can arrive from the
+ * CDN's address, so the address the CDN forwards is used when present. (A visitor could fake that
+ * header, which only lets them dodge the limit — it is never used for anything else.)
+ */
+function visitor_ip(): string
+{
+    foreach (['HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP', 'HTTP_X_FORWARDED_FOR'] as $header) {
+        $value = trim(explode(',', (string) ($_SERVER[$header] ?? ''))[0]);
+        if ($value !== '' && filter_var($value, FILTER_VALIDATE_IP)) {
+            return $value;
+        }
+    }
+    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 45);
+}
+
+/** Table for everything visitors send through the site's forms (created on first use). */
+function ensure_submissions_table(): void
+{
+    static $done = false;
+    if ($done) {
+        return;
+    }
+    $done = true;
+    db()->exec("CREATE TABLE IF NOT EXISTS form_submissions (
+        id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+        type        ENUM('order', 'appointment', 'contact', 'subscribe') NOT NULL,
+        reference   VARCHAR(20)  NULL,
+        name        VARCHAR(120) NOT NULL DEFAULT '',
+        email       VARCHAR(190) NOT NULL DEFAULT '',
+        phone       VARCHAR(40)  NOT NULL DEFAULT '',
+        total       INT UNSIGNED NULL,
+        data        MEDIUMTEXT   NOT NULL,
+        status      ENUM('new', 'in_progress', 'done') NOT NULL DEFAULT 'new',
+        ip          VARCHAR(45)  NOT NULL DEFAULT '',
+        created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_submissions_list (type, status, created_at),
+        INDEX idx_submissions_ip (ip, created_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
+}
+
 /**
  * Add product columns introduced after the first release (price on request, limited-time offer),
  * so a database imported earlier keeps working without a manual step. Runs once per request.

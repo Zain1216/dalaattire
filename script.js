@@ -444,6 +444,91 @@ document.addEventListener("DOMContentLoaded", () => {
   const BACKEND_URL = "https://subscription.zainulabideen.tech/daula-attire";
   const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname);
   const CATALOG_URL = isLocal ? "backend/api/catalog.php" : `${BACKEND_URL}/backend/api/catalog.php`;
+  // Forms (orders, consultations, messages, newsletter) are saved here and appear in the admin Inbox
+  const SUBMIT_URL = isLocal ? "backend/api/submit.php" : `${BACKEND_URL}/backend/api/submit.php`;
+
+  /** Send a form to the backend. Resolves with the server's reply; rejects with a message to show. */
+  async function submitForm(type, payload, form) {
+    let res;
+    try {
+      res = await fetch(SUBMIT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        // "website" is the hidden spam trap added to every form below; people never fill it in
+        body: JSON.stringify({ type, website: form?.querySelector('[name="website"]')?.value || "", ...payload }),
+      });
+    } catch {
+      throw Object.assign(new Error("We couldn't reach our server. Please check your connection, or message us on WhatsApp."), { offline: true });
+    }
+    let data = null;
+    try {
+      data = await res.json();
+    } catch {
+      // not JSON: the backend is missing or broken
+    }
+    if (!data) {
+      throw Object.assign(new Error("We couldn't send this right now. Please try again, or message us on WhatsApp."), { offline: true });
+    }
+    if (!res.ok || !data.ok) {
+      throw Object.assign(new Error(data.error || "We couldn't send this right now. Please try again."), { offline: res.status >= 500 });
+    }
+    return data;
+  }
+
+  /** Disable a form's submit button while it is being sent. */
+  async function sending(form, task) {
+    const button = form.querySelector('[type="submit"]') || document.querySelector(`[form="${form.id}"]`);
+    const label = button?.innerHTML;
+    if (button) {
+      button.disabled = true;
+      button.textContent = "Sending…";
+    }
+    try {
+      return await task();
+    } finally {
+      if (button) {
+        button.disabled = false;
+        button.innerHTML = label;
+      }
+    }
+  }
+
+  // Hidden spam-trap field on every form (bots fill in every field; people never see this one)
+  document.querySelectorAll("#appointment-form, #subscribe-form, #message-form, #checkout-form").forEach((form) => {
+    const trap = document.createElement("input");
+    trap.type = "text";
+    trap.name = "website";
+    trap.tabIndex = -1;
+    trap.autocomplete = "off";
+    trap.setAttribute("aria-hidden", "true");
+    trap.style.cssText = "position:absolute;left:-9999px;width:1px;height:1px;opacity:0;";
+    form.appendChild(trap);
+  });
+
+  /**
+   * Consultation form "Garment of Interest": one option per category in the catalog,
+   * so it always matches the categories managed in the admin.
+   */
+  function fillGarmentOptions() {
+    document.querySelectorAll("#garment-type").forEach((select) => {
+      const current = select.value;
+      select.required = true;
+      select.innerHTML =
+        '<option value="" disabled>Choose a category</option>' +
+        Object.values(CATEGORIES).map((c) => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join("");
+      select.value = [...select.options].some((o) => o.value === current) ? current : "";
+    });
+  }
+
+  /** Best category for a button's label, e.g. "Ceremonial Sherwani" -> "Sherwani". */
+  function categoryForLabel(label) {
+    const words = (text) => text.toLowerCase().split(/[^a-z0-9-]+/).filter(Boolean);
+    const have = words(label);
+    const match = Object.values(CATEGORIES).find((c) => words(c.name).every((w) => have.includes(w)));
+    return match ? match.name : "";
+  }
+
+  fillGarmentOptions();
 
   function replaceContents(target, source) {
     Object.keys(target).forEach((key) => delete target[key]);
@@ -466,6 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   loadCatalog().then(() => {
     updateCartBadge();
+    fillGarmentOptions();
     renderHomeCategories();
     renderServicesSections();
     initShopPages();
@@ -936,21 +1022,50 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
         errorEl.hidden = true;
-  
+
         const data = Object.fromEntries(new FormData(form));
-        const orderNumber = "DA-" + Date.now().toString().slice(-6);
+        sending(form, async () => {
+          // Save the order; the server works out the prices and gives the order number
+          let saved = null;
+          try {
+            saved = await submitForm("order", {
+              ...data,
+              coupon,
+              items: items.map(({ id, size, qty }) => ({ id, size, qty })),
+            }, form);
+          } catch (err) {
+            if (!err.offline) {
+              errorEl.textContent = err.message;
+              errorEl.hidden = false;
+              return;
+            }
+            // Server unreachable: the customer can still send the order by email / WhatsApp below
+          }
+          showOrderDone(data, saved);
+        });
+      });
+
+      function showOrderDone(data, saved) {
+        const orderNumber = saved?.reference || "DA-" + Date.now().toString().slice(-6);
+        // When saved, the server's prices are the ones that count
+        const orderLines = saved
+          ? saved.items.map((l) => `- ${l.name} | Size ${l.size} | Qty ${l.qty} | ${formatPrice(l.line_total)}`)
+          : items.map((item) => {
+              const product = PRODUCTS[item.id];
+              return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(unitPrice(product) * item.qty)}`;
+            });
+        const orderSubtotal = saved ? saved.subtotal : subtotal;
+        const orderShipping = saved ? saved.shipping : SHIPPING_FEE;
+        const orderTotal = saved ? saved.total : total;
         const lines = [
           `New order ${orderNumber}`,
           "",
-          ...items.map((item) => {
-            const product = PRODUCTS[item.id];
-            return `- ${product.name} | Size ${item.size} | Qty ${item.qty} | ${formatPrice(unitPrice(product) * item.qty)}`;
-          }),
+          ...orderLines,
           "",
-          `Subtotal: ${formatPrice(subtotal)}`,
-          `Shipping: ${SHIPPING_FEE ? formatPrice(SHIPPING_FEE) : "Free"}`,
+          `Subtotal: ${formatPrice(orderSubtotal)}`,
+          `Shipping: ${orderShipping ? formatPrice(orderShipping) : "Free"}`,
           coupon ? `Coupon: ${coupon}` : null,
-          `Total: ${formatPrice(total)}`,
+          `Total: ${formatPrice(orderTotal)}`,
           `Payment: ${data.payment}`,
           "",
           `Name: ${data.name}`,
@@ -977,11 +1092,16 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch {
           // Storage unavailable
         }
+        // Saved orders are already with our team; otherwise the customer needs to send it
+        document.querySelector(".order-done-copy").innerHTML = saved
+          ? `Your order has been received. We will contact you on <strong>${escapeHtml(data.phone)}</strong> to arrange measurements, payment and delivery. You can also send us the order details below.`
+          : `We couldn't reach our server, so please send your order to our team below. We will contact you on <strong>${escapeHtml(data.phone)}</strong> to arrange measurements, payment and delivery.`;
+
         document.getElementById("checkout-layout").hidden = true;
         checkoutPage.querySelector("h1").hidden = true;
         document.getElementById("order-done").hidden = false;
         window.scrollTo({ top: 0 });
-      });
+      }
     }
   }
 
@@ -991,11 +1111,10 @@ document.addEventListener("DOMContentLoaded", () => {
     closeAllDrawers();
     appointmentModal.classList.add("active");
     document.body.style.overflow = "hidden";
-    if (serviceTitle) {
-      const garmentSelect = document.getElementById("garment-type");
-      if (garmentSelect) {
-        garmentSelect.value = serviceTitle;
-      }
+    const garmentSelect = document.getElementById("garment-type");
+    if (garmentSelect && serviceTitle) {
+      // Buttons say things like "Ceremonial Sherwani"; pick the matching category, or leave the choice open
+      garmentSelect.value = categoryForLabel(serviceTitle);
     }
   }
 
@@ -1027,30 +1146,64 @@ document.addEventListener("DOMContentLoaded", () => {
   // Appointment Form Submit
   appointmentForm?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const name = document.getElementById("client-name")?.value || "Client";
-    closeModal();
-    appointmentForm.reset();
-    showToast(`Thank you, ${name}. Your bespoke consultation request has been received.`);
+    const value = (id) => document.getElementById(id)?.value.trim() || "";
+    const name = value("client-name");
+    sending(appointmentForm, async () => {
+      try {
+        await submitForm("appointment", {
+          name,
+          phone: value("client-phone"),
+          garment: value("garment-type"),
+          date: value("appointment-date"),
+          notes: value("client-notes"),
+        }, appointmentForm);
+        closeModal();
+        appointmentForm.reset();
+        showToast(`Thank you, ${name}. Your bespoke consultation request has been received.`);
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
   });
 
   // Newsletter Subscription Form Submit
   subscribeForm?.addEventListener("submit", (e) => {
     e.preventDefault();
     const emailInput = document.getElementById("email");
-    if (emailInput && emailInput.value.trim()) {
-      const email = emailInput.value.trim();
-      emailInput.value = "";
-      showToast("Thank you for subscribing to Daula Attire.");
-    }
+    const email = emailInput?.value.trim();
+    if (!email) return;
+    sending(subscribeForm, async () => {
+      try {
+        const res = await submitForm("subscribe", { email }, subscribeForm);
+        emailInput.value = "";
+        showToast(res.message || "Thank you for subscribing to Daula Attire.");
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
   });
 
   // Contact Page Message Form Submit
   const messageForm = document.getElementById("message-form");
   messageForm?.addEventListener("submit", (e) => {
     e.preventDefault();
-    const name = document.getElementById("msg-name")?.value.trim() || "Client";
-    messageForm.reset();
-    showToast(`Thank you, ${name}. Our team will be in touch shortly.`);
+    const value = (id) => document.getElementById(id)?.value.trim() || "";
+    const name = value("msg-name");
+    sending(messageForm, async () => {
+      try {
+        await submitForm("contact", {
+          name,
+          email: value("msg-email"),
+          phone: value("msg-phone"),
+          subject: value("msg-subject"),
+          message: value("msg-body"),
+        }, messageForm);
+        messageForm.reset();
+        showToast(`Thank you, ${name}. Our team will be in touch shortly.`);
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
   });
 
   // Services Page Carousels: one dot per page of visible cards.

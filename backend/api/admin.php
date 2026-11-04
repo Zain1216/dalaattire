@@ -22,41 +22,7 @@ header('X-Content-Type-Options: nosniff');
 // ---------------------------------------------------------------------------
 // CORS: answer only our own sites
 // ---------------------------------------------------------------------------
-/** "https://zain1216.github.io/dalaattire" -> "https://zain1216.github.io" */
-function origin_of(string $url): string
-{
-    $p = parse_url($url);
-    if (empty($p['scheme']) || empty($p['host'])) {
-        return '';
-    }
-    return strtolower($p['scheme'] . '://' . $p['host']) . (isset($p['port']) ? ':' . $p['port'] : '');
-}
-
-// Allowed: the configured list, plus the storefront (site_url) and this backend (backend_url),
-// so an older config.php without 'allowed_origins' still works for the GitHub admin.
-$allowedOrigins = array_filter(array_merge(
-    config()['allowed_origins'] ?? [],
-    [origin_of((string) (config()['site_url'] ?? '')), origin_of((string) (config()['backend_url'] ?? ''))]
-));
-
-$origin = (string) ($_SERVER['HTTP_ORIGIN'] ?? '');
-if ($origin !== '') {
-    $allowed = in_array(strtolower(rtrim($origin, '/')), array_map(static fn ($o) => strtolower(rtrim($o, '/')), $allowedOrigins), true)
-        || preg_match('#^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$#', $origin);
-    if (!$allowed) {
-        http_response_code(403);
-        exit(json_encode(['error' => 'This website may not use the admin API.']));
-    }
-    header('Access-Control-Allow-Origin: ' . $origin);
-    header('Vary: Origin');
-    header('Access-Control-Allow-Headers: Authorization, Content-Type');
-    header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
-    header('Access-Control-Max-Age: 600');
-}
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
+allow_our_origins_only('admin API');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -147,7 +113,7 @@ function require_admin(): array
 
 function client_ip(): string
 {
-    return substr((string) ($_SERVER['REMOTE_ADDR'] ?? 'unknown'), 0, 45);
+    return substr(visitor_ip(), 0, 45);
 }
 
 function product_row(array $p): array
@@ -460,6 +426,74 @@ try {
             $pdo->prepare('UPDATE product_images SET sort_order = sort_order + 1 WHERE product_id = ?')->execute([$productId]);
             $pdo->prepare('UPDATE product_images SET sort_order = 0 WHERE id = ?')->execute([$imageId]);
             respond(['ok' => true, 'message' => 'Cover photo changed.']);
+
+        // -------------------------------------------------------------------
+        // Inbox: orders, appointments, messages and subscribers sent from the site
+        // -------------------------------------------------------------------
+        case 'inbox_counts':
+            ensure_submissions_table();
+            $counts = ['order' => 0, 'appointment' => 0, 'contact' => 0, 'subscribe' => 0];
+            $newCounts = $counts;
+            foreach ($pdo->query("SELECT type, COUNT(*) AS n, SUM(status = 'new') AS fresh FROM form_submissions GROUP BY type") as $c) {
+                $counts[$c['type']] = (int) $c['n'];
+                $newCounts[$c['type']] = (int) $c['fresh'];
+            }
+            respond(['counts' => $counts, 'new' => $newCounts, 'totalNew' => array_sum($newCounts)]);
+
+        case 'inbox':
+            ensure_submissions_table();
+            $type = (string) ($_GET['type'] ?? 'order');
+            if (!in_array($type, ['order', 'appointment', 'contact', 'subscribe'], true)) {
+                fail('Unknown inbox.', 400);
+            }
+            $where = 'type = ?';
+            $params = [$type];
+            $status = (string) ($_GET['status'] ?? '');
+            if (in_array($status, ['new', 'in_progress', 'done'], true)) {
+                $where .= ' AND status = ?';
+                $params[] = $status;
+            }
+            $limit = 50;
+            $offset = max(0, (int) ($_GET['offset'] ?? 0));
+            $count = $pdo->prepare("SELECT COUNT(*) FROM form_submissions WHERE {$where}");
+            $count->execute($params);
+            $stmt = $pdo->prepare("SELECT id, type, reference, name, email, phone, total, data, status, created_at
+                                   FROM form_submissions WHERE {$where} ORDER BY id DESC LIMIT {$limit} OFFSET {$offset}");
+            $stmt->execute($params);
+            respond([
+                'total' => (int) $count->fetchColumn(),
+                'limit' => $limit,
+                'offset' => $offset,
+                'items' => array_map(static fn ($s) => [
+                    'id'        => (int) $s['id'],
+                    'type'      => $s['type'],
+                    'reference' => $s['reference'],
+                    'name'      => $s['name'],
+                    'email'     => $s['email'],
+                    'phone'     => $s['phone'],
+                    'total'     => $s['total'] !== null ? (int) $s['total'] : null,
+                    'data'      => json_decode($s['data'], true) ?: [],
+                    'status'    => $s['status'],
+                    // Stored in the server's time; sent as a timestamp the browser shows in local time
+                    'createdAt' => strtotime($s['created_at']) * 1000,
+                ], $stmt->fetchAll()),
+            ]);
+
+        case 'inbox_status':
+            require_method('POST');
+            ensure_submissions_table();
+            $status = input('status');
+            if (!in_array($status, ['new', 'in_progress', 'done'], true)) {
+                fail('Unknown status.');
+            }
+            $pdo->prepare('UPDATE form_submissions SET status = ? WHERE id = ?')->execute([$status, (int) input('id', '0')]);
+            respond(['ok' => true]);
+
+        case 'inbox_delete':
+            require_method('POST');
+            ensure_submissions_table();
+            $pdo->prepare('DELETE FROM form_submissions WHERE id = ?')->execute([(int) input('id', '0')]);
+            respond(['ok' => true, 'message' => 'Deleted.']);
     }
 
     fail('Unknown action.', 404);

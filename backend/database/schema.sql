@@ -61,6 +61,23 @@ CREATE TABLE IF NOT EXISTS admin_tokens (
   INDEX idx_tokens_expiry (expires_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Everything visitors send through the site's forms: orders, appointments, messages, subscribers
+CREATE TABLE IF NOT EXISTS form_submissions (
+  id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  type        ENUM('order', 'appointment', 'contact', 'subscribe') NOT NULL,
+  reference   VARCHAR(20)  NULL,                  -- order number, e.g. DA-1042
+  name        VARCHAR(120) NOT NULL DEFAULT '',
+  email       VARCHAR(190) NOT NULL DEFAULT '',
+  phone       VARCHAR(40)  NOT NULL DEFAULT '',
+  total       INT UNSIGNED NULL,                  -- orders only, worked out on the server
+  data        MEDIUMTEXT   NOT NULL,              -- the rest of the form, as JSON
+  status      ENUM('new', 'in_progress', 'done') NOT NULL DEFAULT 'new',
+  ip          VARCHAR(45)  NOT NULL DEFAULT '',
+  created_at  TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  INDEX idx_submissions_list (type, status, created_at),
+  INDEX idx_submissions_ip (ip, created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- Failed logins, used to slow down password guessing
 CREATE TABLE IF NOT EXISTS admin_login_attempts (
   id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,

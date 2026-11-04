@@ -382,6 +382,173 @@
     });
   }
 
+  // ------------------------------------------------------------------------
+  // Inbox: orders, consultations, messages and subscribers sent from the website
+  // ------------------------------------------------------------------------
+  const INBOX_TABS = [
+    { type: "order", label: "Orders" },
+    { type: "appointment", label: "Consultations" },
+    { type: "contact", label: "Messages" },
+    { type: "subscribe", label: "Subscribers" },
+  ];
+  const STATUSES = { new: "New", in_progress: "In progress", done: "Done" };
+
+  async function refreshInboxBadge() {
+    try {
+      const { totalNew } = await api("inbox_counts");
+      const badge = document.getElementById("inbox-badge");
+      badge.textContent = totalNew;
+      badge.hidden = !totalNew;
+    } catch {
+      // Older backend without the Inbox: no badge
+    }
+  }
+
+  function whenText(ms) {
+    return new Date(ms).toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  }
+
+  /** WhatsApp link for a customer's phone number (Pakistani 03xx numbers become 923xx). */
+  function waLink(phone) {
+    let digits = String(phone).replace(/\D/g, "");
+    if (digits.startsWith("00")) digits = digits.slice(2);
+    if (digits.startsWith("0")) digits = "92" + digits.slice(1);
+    return `https://wa.me/${digits}`;
+  }
+
+  function contactLinks(s) {
+    return [
+      s.phone ? `<a href="tel:${esc(s.phone)}">${esc(s.phone)}</a> · <a href="${esc(waLink(s.phone))}" target="_blank" rel="noopener">WhatsApp</a>` : "",
+      s.email ? `<a href="mailto:${esc(s.email)}">${esc(s.email)}</a>` : "",
+    ].filter(Boolean).join("<br>");
+  }
+
+  function inboxDetails(s) {
+    const d = s.data || {};
+    const row = (label, value) => (value ? `<div class="inbox-field"><span>${label}</span><p>${esc(value)}</p></div>` : "");
+    if (s.type === "order") {
+      return `
+        <table class="inbox-items">
+          <thead><tr><th>Product</th><th>Size</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+          <tbody>${(d.items || []).map((l) => `<tr><td>${esc(l.name)}</td><td>${esc(l.size)}</td><td>${l.qty}</td><td>${formatPrice(l.unit_price)}${l.unit_price < l.regular_price ? ' <span class="pill pill-on">Offer</span>' : ""}</td><td>${formatPrice(l.line_total)}</td></tr>`).join("")}</tbody>
+          <tfoot>
+            <tr><td colspan="4">Subtotal</td><td>${formatPrice(d.subtotal || 0)}</td></tr>
+            <tr><td colspan="4">Shipping</td><td>${d.shipping ? formatPrice(d.shipping) : "Free"}</td></tr>
+            <tr class="strong-row"><td colspan="4">Total</td><td>${formatPrice(s.total || 0)}</td></tr>
+          </tfoot>
+        </table>
+        ${row("Payment", d.payment)}${row("Coupon", d.coupon)}
+        ${row("Delivery address", [d.address, d.city, d.postal].filter(Boolean).join(", "))}${row("Notes", d.notes)}`;
+    }
+    if (s.type === "appointment") return row("Garment", d.garment) + row("Preferred date", d.date) + row("Notes", d.notes);
+    if (s.type === "contact") return row("Subject", d.subject) + row("Message", d.message);
+    return "";
+  }
+
+  async function inboxView() {
+    const params = new URLSearchParams(location.hash.split("?")[1] || "");
+    const type = INBOX_TABS.some((t) => t.type === params.get("type")) ? params.get("type") : "order";
+    const status = params.get("status") || "";
+    const offset = Number(params.get("offset")) || 0;
+    const query = { type, offset };
+    if (status) query.status = status;
+    const [counts, list] = await Promise.all([api("inbox_counts"), api("inbox", { query })]);
+    const link = (q) => "#/inbox?" + new URLSearchParams({ type, ...(status ? { status } : {}), ...q });
+
+    view.innerHTML = `
+      <div class="page-head"><h1>Inbox ${counts.totalNew ? `<span class="count">${counts.totalNew} new</span>` : ""}</h1></div>
+      <nav class="inbox-tabs">
+        ${INBOX_TABS.map((t) => `<a href="#/inbox?type=${t.type}" class="${t.type === type ? "active" : ""}">${t.label}
+          <span class="tab-count">${counts.counts[t.type]}</span>${counts.new[t.type] ? `<span class="nav-badge">${counts.new[t.type]}</span>` : ""}</a>`).join("")}
+      </nav>
+      ${type === "subscribe" ? "" : `
+      <div class="toolbar">
+        <label>Status
+          <select id="status-filter">
+            <option value="">All</option>
+            ${Object.entries(STATUSES).map(([v, l]) => `<option value="${v}" ${v === status ? "selected" : ""}>${l}</option>`).join("")}
+          </select>
+        </label>
+      </div>`}
+      ${type === "subscribe" ? subscribersTable(list.items) : `
+      <div class="inbox-list">
+        ${list.items.map((s) => `
+          <article class="card inbox-card status-${s.status}" data-id="${s.id}">
+            <header class="inbox-head">
+              <div>
+                <h2>${s.reference ? esc(s.reference) + " · " : ""}${esc(s.name || "—")}</h2>
+                <p class="muted">${whenText(s.createdAt)}${s.total !== null ? ` · <strong class="gold">${formatPrice(s.total)}</strong>` : ""}</p>
+              </div>
+              <div class="inbox-actions">
+                <select data-status aria-label="Status">${Object.entries(STATUSES).map(([v, l]) => `<option value="${v}" ${v === s.status ? "selected" : ""}>${l}</option>`).join("")}</select>
+                <button type="button" class="link-danger" data-delete>Delete</button>
+              </div>
+            </header>
+            <div class="inbox-contact">${contactLinks(s)}</div>
+            <div class="inbox-body">${inboxDetails(s)}</div>
+          </article>`).join("") || '<p class="card empty">Nothing here yet.</p>'}
+      </div>`}
+      ${list.total > list.limit ? `
+      <div class="pager">
+        ${offset > 0 ? `<a href="${link({ offset: Math.max(0, offset - list.limit) })}">&larr; Newer</a>` : "<span></span>"}
+        <span class="muted">${offset + 1}–${Math.min(offset + list.limit, list.total)} of ${list.total}</span>
+        ${offset + list.limit < list.total ? `<a href="${link({ offset: offset + list.limit })}">Older &rarr;</a>` : "<span></span>"}
+      </div>` : ""}`;
+
+    document.getElementById("status-filter")?.addEventListener("change", (e) => {
+      location.hash = "#/inbox?" + new URLSearchParams({ type, ...(e.target.value ? { status: e.target.value } : {}) });
+    });
+
+    view.querySelectorAll("[data-id]").forEach((card) => {
+      const id = card.dataset.id;
+      card.querySelector("[data-status]")?.addEventListener("change", async (e) => {
+        try {
+          await api("inbox_status", { body: formData(document.createElement("form"), { id, status: e.target.value }) });
+          card.className = card.className.replace(/status-\w+/, "status-" + e.target.value);
+          refreshInboxBadge();
+        } catch (err) {
+          flash(err.message, "error");
+        }
+      });
+      card.querySelector("[data-delete]")?.addEventListener("click", async () => {
+        if (!confirm("Delete this permanently?")) return;
+        try {
+          await api("inbox_delete", { body: formData(document.createElement("form"), { id }) });
+          clearFlash();
+          flash("Deleted.");
+          await inboxView();
+          refreshInboxBadge();
+        } catch (err) {
+          flash(err.message, "error");
+        }
+      });
+    });
+  }
+
+  function subscribersTable(items) {
+    if (!items.length) return '<p class="card empty">No subscribers yet.</p>';
+    return `
+      <p class="hint">Copy all emails: <button type="button" class="link" id="copy-emails">Copy</button></p>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead><tr><th>Email</th><th>Subscribed</th><th></th></tr></thead>
+          <tbody>${items.map((s) => `<tr data-id="${s.id}"><td><a href="mailto:${esc(s.email)}">${esc(s.email)}</a></td><td>${whenText(s.createdAt)}</td><td><button type="button" class="link-danger" data-delete>Remove</button></td></tr>`).join("")}</tbody>
+        </table>
+      </div>`;
+  }
+
+  // "Copy" on the subscribers tab
+  view.addEventListener("click", async (e) => {
+    if (e.target.id !== "copy-emails") return;
+    const emails = [...view.querySelectorAll(".data-table td a[href^='mailto:']")].map((a) => a.textContent).join(", ");
+    try {
+      await navigator.clipboard.writeText(emails);
+      flash("Emails copied.");
+    } catch {
+      prompt("Copy these emails:", emails);
+    }
+  });
+
   async function categoriesView() {
     const { categories } = await api("categories");
     const card = (c) => `
@@ -470,7 +637,9 @@
       view.innerHTML = '<p class="muted loading">Loading&hellip;</p>';
       if (path.startsWith("/product/")) await productView(path.split("/")[2]);
       else if (path === "/categories") await categoriesView();
+      else if (path === "/inbox") await inboxView();
       else await productsView();
+      refreshInboxBadge();
       window.scrollTo(0, 0);
     } catch (err) {
       if (!token) {
