@@ -103,3 +103,9 @@ button:disabled { opacity: 0.6; cursor: wait; }
 .offer-box .hint { margin-top: 0; }
 .offer-box #clear-offer { justify-self: start; }
 .data-table s { margin-right: 4px; }
+
+/* Show / hide password */
+.password-wrap { position: relative; display: block; }
+.password-wrap input { padding-right: 46px; }
+.password-toggle { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); width: 36px; height: 36px; display: grid; place-items: center; border-radius: 4px; color: var(--muted); }
+.password-toggle:hover, .password-toggle:focus-visible { color: var(--gold); outline: none; background: rgba(200, 162, 101, 0.1); }

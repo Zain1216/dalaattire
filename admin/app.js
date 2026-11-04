@@ -131,6 +131,33 @@
   // ------------------------------------------------------------------------
   // Views
   // ------------------------------------------------------------------------
+  const EYE_OPEN = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const EYE_SHUT = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.7 10.7 0 0 1 12 5c6.4 0 10 7 10 7a17.7 17.7 0 0 1-3.2 4.2M6.6 6.6A17.5 17.5 0 0 0 2 12s3.6 7 10 7a10.6 10.6 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+
+  /** Eye button inside a password field to show or hide what was typed. */
+  function addPasswordToggle(input) {
+    const wrap = document.createElement("span");
+    wrap.className = "password-wrap";
+    input.replaceWith(wrap);
+    wrap.appendChild(input);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "password-toggle";
+    const sync = () => {
+      const shown = input.type === "text";
+      btn.innerHTML = shown ? EYE_SHUT : EYE_OPEN;
+      btn.setAttribute("aria-label", shown ? "Hide password" : "Show password");
+      btn.setAttribute("aria-pressed", String(shown));
+    };
+    btn.addEventListener("click", () => {
+      input.type = input.type === "password" ? "text" : "password";
+      sync();
+      input.focus();
+    });
+    sync();
+    wrap.appendChild(btn);
+  }
+
   function authView({ title, intro = "", button, action }) {
     bar.hidden = true;
     view.innerHTML = `
@@ -145,6 +172,7 @@
         </form>
       </div>`;
     const form = document.getElementById("auth-form");
+    form.querySelectorAll('input[type="password"]').forEach(addPasswordToggle);
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       busy(form, async () => {
