@@ -226,10 +226,12 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .category-view-more {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 7px;
-  margin: 22px 0 0 auto;
+  width: min(100%, 962px);
+  justify-content: flex-end;
+  margin: 22px auto 0;
   color: var(--primary);
   font-size: 0.72rem;
   font-weight: 600;
