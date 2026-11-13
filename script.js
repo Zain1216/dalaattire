@@ -436,8 +436,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ==========================================================================
-  // Live catalog: load categories & products from the backend (MySQL) when it is
-  // available, otherwise keep the built-in list above (e.g. on GitHub Pages).
+  // Live catalog: load categories & products from the backend (MySQL).
   // ==========================================================================
   // The live site is on GitHub Pages, which cannot run PHP, so it asks the Hostinger backend.
   // When the site itself is served with PHP (local XAMPP / php -S), the backend sits right next to it.
@@ -446,6 +445,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const CATALOG_URL = isLocal ? "backend/api/catalog.php" : `${BACKEND_URL}/backend/api/catalog.php`;
   // Forms (orders, consultations, messages, newsletter) are saved here and appear in the admin Inbox
   const SUBMIT_URL = isLocal ? "backend/api/submit.php" : `${BACKEND_URL}/backend/api/submit.php`;
+  let catalogLoaded = false;
 
   /** Send a form to the backend. Resolves with the server's reply; rejects with a message to show. */
   async function submitForm(type, payload, form) {
@@ -543,9 +543,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.categories && data.products && Object.keys(data.products).length) {
         replaceContents(CATEGORIES, data.categories);
         replaceContents(PRODUCTS, data.products);
+        catalogLoaded = true;
       }
     } catch {
-      // Backend not reachable: the built-in catalog stays in place
+      // Product detail and cart code can still use the embedded catalog, but
+      // service sections remain empty until live catalog data is available.
     }
   }
 
@@ -567,10 +569,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderHomeCategories() {
     const grid = document.querySelector("#services .service-grid");
     if (!grid) return;
+    grid.innerHTML = "";
     const cards = Object.entries(CATEGORIES)
       .map(([slug, c]) => ({ slug, c, items: productsIn(slug) }))
       .filter(({ items }) => items.length);
-    if (!cards.length) return;
+    if (!catalogLoaded || !cards.length) return;
     grid.innerHTML = cards
       .map(({ slug, c, items }) => `
         <a class="service-card" href="category.html?c=${encodeURIComponent(slug)}">
@@ -585,11 +588,12 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderServicesSections() {
     const section = document.getElementById("what-we-offer");
     if (!section) return;
+    section.querySelectorAll(".offer-category").forEach((el) => el.remove());
+    if (!catalogLoaded) return;
     const blocks = Object.entries(CATEGORIES)
       .map(([slug, c]) => ({ slug, c, items: productsIn(slug).slice(0, 8) }))
       .filter(({ items }) => items.length);
     if (!blocks.length) return;
-    section.querySelectorAll(".offer-category").forEach((el) => el.remove());
     blocks.forEach(({ slug, c, items }) => {
       const block = document.createElement("div");
       block.className = "offer-category";

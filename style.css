@@ -989,6 +989,30 @@ footer {
   font-family: var(--font-sans);
 }
 
+.footer-address {
+  color: #ffffff;
+  font-size: 0.84rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  margin: 0 0 18px;
+}
+
+.footer-hours {
+  color: #b0a89d;
+  font-size: 0.76rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  margin: 0 0 18px;
+}
+
+.footer-hours strong {
+  color: #d4af37;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
 .footer-subtext {
   color: #b0a89d;
   font-size: 0.72rem;
@@ -1940,6 +1964,42 @@ footer {
   font-weight: 500;
   text-transform: uppercase;
   color: #f2ede4;
+}
+
+/* About: CEO */
+.ceo-section {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.85fr) 1fr;
+  gap: 72px;
+  align-items: center;
+  padding-top: 24px;
+  padding-bottom: 96px;
+}
+
+.ceo-photo {
+  position: relative;
+  max-width: 430px;
+  margin-left: auto;
+  padding: 0 24px 24px 0;
+}
+
+.ceo-photo::before {
+  content: "";
+  position: absolute;
+  inset: 24px 0 0 24px;
+  border: 1px solid var(--primary);
+  z-index: -1;
+}
+
+.ceo-photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.ceo-section h2 {
+  margin-bottom: 28px;
 }
 
 /* About: Why Choose */
@@ -3719,12 +3779,16 @@ footer {
 /* Responsive Media Queries */
 @media (max-width: 990px) {
   .about-story,
+  .ceo-section,
   .why-choose,
   .contact-grid {
     grid-template-columns: 1fr;
     gap: 48px;
   }
   .framed-photo {
+    margin: 0 auto;
+  }
+  .ceo-photo {
     margin: 0 auto;
   }
   .why-choose .about-copy {
@@ -4183,4 +4247,3 @@ select:focus {
     animation: none !important;
   }
 }
-
