@@ -618,8 +618,8 @@ document.addEventListener("DOMContentLoaded", () => {
             ${items.map(([id, p]) => `<a class="offer-card" href="product.html?id=${encodeURIComponent(id)}"><img src="${escapeHtml(p.images[0])}" alt="${escapeHtml(p.name)}" loading="lazy"></a>`).join("")}
           </div>
           <div class="carousel-dots" aria-label="${escapeHtml(c.name)} slides"></div>
-        </div>`;
-      block.insertAdjacentHTML("beforeend", `<a class="btn btn-gold-outline category-view-more" href="category.html?c=${encodeURIComponent(slug)}">View More</a>`);
+        </div>
+        <a class="btn btn-gold-outline category-view-more" href="category.html?c=${encodeURIComponent(slug)}">View All</a>`;
       section.appendChild(block);
       setupCarousel(block.querySelector("[data-carousel]"));
     });
