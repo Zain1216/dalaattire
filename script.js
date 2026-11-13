@@ -619,7 +619,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
           <div class="carousel-dots" aria-label="${escapeHtml(c.name)} slides"></div>
         </div>
-        <a class="btn btn-gold-outline category-view-more" href="category.html?c=${encodeURIComponent(slug)}">View All</a>`;
+        <a class="category-view-more" href="category.html?c=${encodeURIComponent(slug)}">View More <span aria-hidden="true">→</span></a>`;
       section.appendChild(block);
       setupCarousel(block.querySelector("[data-carousel]"));
     });

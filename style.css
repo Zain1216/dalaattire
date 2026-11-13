@@ -226,9 +226,27 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .category-view-more {
-  display: block;
-  width: fit-content;
-  margin: 28px auto 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin: 22px 0 0;
+  color: var(--primary);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s ease, gap 0.2s ease;
+}
+
+.category-view-more:hover {
+  color: #ffffff;
+  gap: 11px;
+}
+
+.category-view-more span {
+  font-size: 1.05rem;
+  line-height: 1;
 }
 
 .icon-button:hover {
