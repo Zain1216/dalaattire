@@ -4255,11 +4255,15 @@ footer {
   }
   .floating-whatsapp {
     right: 16px;
-    bottom: 16px;
-    padding: 12px;
+    bottom: 32px;
+    padding: 16px;
   }
   .floating-whatsapp span {
     display: none;
+  }
+  .floating-whatsapp svg {
+    width: 28px;
+    height: 28px;
   }
 }
 
