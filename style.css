@@ -229,7 +229,7 @@ h1, h2, h3, h4, h5, h6 {
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin: 22px 0 0;
+  margin: 22px 0 0 auto;
   color: var(--primary);
   font-size: 0.72rem;
   font-weight: 600;
